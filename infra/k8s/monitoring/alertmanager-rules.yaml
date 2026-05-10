@@ -1,0 +1,74 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: fraud-detection-alerts
+  namespace: monitoring
+  labels:
+    app: kube-prometheus-stack
+    release: prometheus
+spec:
+  groups:
+    - name: fraud-detection.scoring
+      rules:
+        - alert: HighScoringLatency
+          expr: histogram_quantile(0.99, sum(rate(scoring_request_duration_seconds_bucket{job="scoring-service"}[5m])) by (le)) > 0.1
+          for: 5m
+          labels:
+            severity: warning
+            service: scoring
+          annotations:
+            summary: "Scoring service p99 latency is above 100ms"
+            description: "The scoring service p99 latency has been {{ $value | humanizeDuration }} for more than 5 minutes."
+            runbook_url: "https://wiki.internal/runbooks/high-scoring-latency"
+
+    - name: fraud-detection.kafka
+      rules:
+        - alert: KafkaConsumerLag
+          expr: kafka_consumer_group_lag{group="scoring-service"} > 1000
+          for: 10m
+          labels:
+            severity: warning
+            service: kafka
+          annotations:
+            summary: "Kafka consumer lag is high"
+            description: "Consumer group {{ $labels.group }} has a lag of {{ $value }} on topic {{ $labels.topic }} for more than 10 minutes."
+            runbook_url: "https://wiki.internal/runbooks/kafka-consumer-lag"
+
+    - name: fraud-detection.fraud-rate
+      rules:
+        - alert: HighFraudRate
+          expr: (sum(rate(transactions_flagged_total{result="fraud"}[15m])) / sum(rate(transactions_scored_total[15m]))) > 0.05
+          for: 15m
+          labels:
+            severity: critical
+            service: scoring
+          annotations:
+            summary: "Fraud rate exceeds 5%"
+            description: "The fraud detection rate has exceeded 5% for the last 15 minutes. Current rate: {{ $value | humanizePercentage }}."
+            runbook_url: "https://wiki.internal/runbooks/high-fraud-rate"
+
+    - name: fraud-detection.availability
+      rules:
+        - alert: ServiceDown
+          expr: |
+            kube_deployment_status_available_replicas{namespace="fraud-detection"} < 1
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Service {{ $labels.deployment }} has no available replicas"
+            description: "Deployment {{ $labels.deployment }} in namespace {{ $labels.namespace }} has had fewer than 1 available replica for more than 2 minutes."
+            runbook_url: "https://wiki.internal/runbooks/service-down"
+
+    - name: fraud-detection.model
+      rules:
+        - alert: ModelDrift
+          expr: model_auc_roc{model_name=~".*"} < 0.90
+          for: 15m
+          labels:
+            severity: warning
+            service: ml-pipeline
+          annotations:
+            summary: "Model AUC-ROC has dropped below 0.90"
+            description: "Model {{ $labels.model_name }} AUC-ROC is {{ $value }}, which is below the 0.90 threshold. Consider retraining."
+            runbook_url: "https://wiki.internal/runbooks/model-drift"

@@ -1,0 +1,89 @@
+include:
+  - docker-compose.infra.yml
+
+services:
+  simulator:
+    build:
+      context: .
+      dockerfile: simulator/Dockerfile
+    container_name: fraud-simulator
+    env_file:
+      - .env
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - fraud-network
+    restart: unless-stopped
+
+  scoring:
+    build:
+      context: .
+      dockerfile: scoring/Dockerfile
+    container_name: fraud-scoring
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      REDIS_URL: redis://redis:6379/0
+      CLICKHOUSE_HOST: clickhouse
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+    networks:
+      - fraud-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  feature-store:
+    build:
+      context: .
+      dockerfile: feature_store/Dockerfile
+    container_name: fraud-feature-store
+    env_file:
+      - .env
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      REDIS_URL: redis://redis:6379/0
+      CLICKHOUSE_HOST: clickhouse
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+    networks:
+      - fraud-network
+    restart: unless-stopped
+
+  alert-service:
+    build:
+      context: .
+      dockerfile: alert_service/Dockerfile
+    container_name: fraud-alert-service
+    env_file:
+      - .env
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - fraud-network
+    restart: unless-stopped

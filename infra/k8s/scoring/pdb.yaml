@@ -1,0 +1,12 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: scoring-service-pdb
+  namespace: fraud-detection
+  labels:
+    app: scoring-service
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: scoring-service

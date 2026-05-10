@@ -1,0 +1,81 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+
+rule_files:
+  - "/etc/prometheus/rules/*.yml"
+
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: "scoring-service"
+    static_configs:
+      - targets: ["scoring-service.fraud-detection.svc:8000"]
+    metrics_path: /metrics
+    scrape_interval: 5s
+
+  - job_name: "streaming-service"
+    static_configs:
+      - targets: ["streaming-service.fraud-detection.svc:8001"]
+    metrics_path: /metrics
+    scrape_interval: 10s
+
+  - job_name: "feature-store-service"
+    static_configs:
+      - targets: ["feature-store-service.fraud-detection.svc:8003"]
+    metrics_path: /metrics
+
+  - job_name: "alert-service"
+    static_configs:
+      - targets: ["alert-service.fraud-detection.svc:8004"]
+    metrics_path: /metrics
+
+  - job_name: "simulator"
+    static_configs:
+      - targets: ["simulator.fraud-detection.svc:8002"]
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+  - job_name: "kafka-exporter"
+    static_configs:
+      - targets: ["kafka-exporter.monitoring.svc:9308"]
+
+  - job_name: "redis-exporter"
+    static_configs:
+      - targets: ["redis-exporter.monitoring.svc:9121"]
+
+  - job_name: "clickhouse-exporter"
+    static_configs:
+      - targets: ["clickhouse-exporter.monitoring.svc:9116"]
+
+  - job_name: "kubernetes-pods"
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+            - fraud-detection
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
+      - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+        action: replace
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+        target_label: __address__
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        action: replace
+        target_label: app
+      - source_labels: [__meta_kubernetes_namespace]
+        action: replace
+        target_label: namespace
+      - source_labels: [__meta_kubernetes_pod_name]
+        action: replace
+        target_label: pod

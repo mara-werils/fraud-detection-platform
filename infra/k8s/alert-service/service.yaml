@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: alert-service
+  namespace: fraud-detection
+  labels:
+    app: alert-service
+    component: alerting
+spec:
+  type: ClusterIP
+  selector:
+    app: alert-service
+  ports:
+    - port: 80
+      targetPort: 8004
+      protocol: TCP
+      name: http
