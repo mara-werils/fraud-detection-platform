@@ -1,0 +1,94 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+*.whl
+pip-wheel-metadata/
+*.manifest
+*.spec
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# Type checking / linting
+.mypy_cache/
+.ruff_cache/
+.dmypy.json
+dmypy.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.settings/
+.classpath
+*.sublime-workspace
+*.sublime-project
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Docker
+docker-compose.override.yml
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn/
+
+# OS
+.DS_Store
+Thumbs.db
+*.tmp
+*.bak
+
+# ML / Model artifacts
+*.pkl
+*.joblib
+*.h5
+*.onnx
+*.pt
+*.pth
+models/*.bin
+mlruns/
+mlflow-artifacts/
+
+# Data
+*.csv
+*.parquet
+*.feather
+data/raw/
+data/processed/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Logs
+*.log
+logs/
