@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: simulator
+  namespace: fraud-detection
+  labels:
+    app: simulator
+    component: simulator
+    app.kubernetes.io/part-of: fraud-detection-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: simulator
+  template:
+    metadata:
+      labels:
+        app: simulator
+        component: simulator
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8002"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: simulator
+          image: simulator:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8002
+              protocol: TCP
+              name: http
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          env:
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka:9092"
+            - name: KAFKA_TOPIC_TRANSACTIONS
+              value: "transactions"
+            - name: TRANSACTIONS_PER_SECOND
+              value: "100"
+            - name: FRAUD_RATIO
+              value: "0.02"
+            - name: LOG_LEVEL
+              value: "info"

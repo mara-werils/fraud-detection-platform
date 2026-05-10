@@ -1,0 +1,61 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: fraud-detection-platform
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - cluster: dev
+            url: https://dev-eks-cluster.example.com
+            targetRevision: develop
+            values:
+              environment: dev
+          - cluster: staging
+            url: https://staging-eks-cluster.example.com
+            targetRevision: staging
+            values:
+              environment: staging
+          - cluster: prod
+            url: https://prod-eks-cluster.example.com
+            targetRevision: main
+            values:
+              environment: prod
+  template:
+    metadata:
+      name: "fraud-detection-{{cluster}}"
+      namespace: argocd
+      labels:
+        app.kubernetes.io/part-of: fraud-detection-platform
+        environment: "{{values.environment}}"
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/your-org/fraud-detection-platform.git
+        targetRevision: "{{targetRevision}}"
+        path: infra/k8s
+        directory:
+          recurse: true
+          exclude: "monitoring/grafana-dashboards/*"
+      destination:
+        server: "{{url}}"
+        namespace: fraud-detection
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - PrunePropagationPolicy=foreground
+        retry:
+          limit: 5
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 3m
+      ignoreDifferences:
+        - group: apps
+          kind: Deployment
+          jsonPointers:
+            - /spec/replicas

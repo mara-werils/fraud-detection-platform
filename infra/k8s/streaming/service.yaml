@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: streaming-service
+  namespace: fraud-detection
+  labels:
+    app: streaming-service
+    component: streaming
+spec:
+  type: ClusterIP
+  selector:
+    app: streaming-service
+  ports:
+    - port: 80
+      targetPort: 8001
+      protocol: TCP
+      name: http

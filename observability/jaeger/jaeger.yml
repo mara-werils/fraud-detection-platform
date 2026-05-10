@@ -1,0 +1,52 @@
+service:
+  extensions: [health_check]
+  pipelines:
+    traces:
+      receivers: [otlp, jaeger]
+      processors: [batch, memory_limiter]
+      exporters: [jaeger_storage]
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+  jaeger:
+    protocols:
+      thrift_http:
+        endpoint: 0.0.0.0:14268
+      grpc:
+        endpoint: 0.0.0.0:14250
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+    spike_limit_mib: 128
+
+exporters:
+  jaeger_storage:
+    trace_storage: memstore
+
+storage:
+  trace:
+    memstore:
+      max_traces: 100000
+
+query:
+  base_path: /
+  ui:
+    config_file: ""
+
+ui:
+  enabled: true
+  port: 16686
