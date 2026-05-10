@@ -198,41 +198,41 @@ class TestEnsembleScorer:
         assert EnsembleScorer.decide(0.3) == Decision.ALLOW
         assert EnsembleScorer.decide(0.49) == Decision.ALLOW
 
-    def test_scorer_returns_scored_transaction(
+    async def test_scorer_returns_scored_transaction(
         self,
         scorer: EnsembleScorer,
         normal_transaction: Transaction,
         normal_features: FeatureVector,
     ) -> None:
         """Scorer should return a valid ScoredTransaction."""
-        result = scorer.score(normal_transaction, normal_features)
+        result = await scorer.score(normal_transaction, normal_features)
         assert result.transaction_id == normal_transaction.transaction_id
         assert result.model_version == "rule-engine-v1"
         assert result.scoring_latency_ms >= 0
         assert 0.0 <= result.fraud_score <= 1.0
 
-    def test_scorer_flags_suspicious(
+    async def test_scorer_flags_suspicious(
         self,
         scorer: EnsembleScorer,
         suspicious_transaction: Transaction,
         suspicious_features: FeatureVector,
     ) -> None:
         """Scorer should flag a suspicious transaction."""
-        result = scorer.score(suspicious_transaction, suspicious_features)
+        result = await scorer.score(suspicious_transaction, suspicious_features)
         assert result.is_flagged is True
         assert result.flag_reason is not None
 
-    def test_scorer_does_not_flag_normal(
+    async def test_scorer_does_not_flag_normal(
         self,
         scorer: EnsembleScorer,
         normal_transaction: Transaction,
         normal_features: FeatureVector,
     ) -> None:
         """Scorer should not flag a normal transaction."""
-        result = scorer.score(normal_transaction, normal_features)
+        result = await scorer.score(normal_transaction, normal_features)
         assert result.is_flagged is False
 
-    def test_scorer_tracks_counts(
+    async def test_scorer_tracks_counts(
         self,
         scorer: EnsembleScorer,
         normal_transaction: Transaction,
@@ -240,7 +240,7 @@ class TestEnsembleScorer:
     ) -> None:
         """Scorer should track total scored and flagged counts."""
         initial_scored = scorer.total_scored
-        scorer.score(normal_transaction, normal_features)
+        await scorer.score(normal_transaction, normal_features)
         assert scorer.total_scored == initial_scored + 1
 
 

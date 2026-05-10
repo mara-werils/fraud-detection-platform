@@ -63,7 +63,7 @@ async def score_transaction(transaction: Transaction, request: Request) -> Score
                 user_id=str(transaction.user_id),
             )
 
-    scored = scorer.score(transaction, features)
+    scored = await scorer.score(transaction, features)
 
     await logger.ainfo(
         "transaction_scored_api",

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from uuid import UUID, uuid4
 
@@ -137,11 +137,14 @@ class TestVelocitySlidingWindows:
         user_id = uuid4()
         now = datetime.now(tz=UTC)
 
-        for _ in range(5):
-            txn = _make_transaction(user_id=user_id, amount=Decimal("10.00"), ts=now)
+        for i in range(5):
+            ts = now + timedelta(seconds=i)  # unique timestamps to avoid sorted-set dedup
+            txn = _make_transaction(user_id=user_id, amount=Decimal("10.00"), ts=ts)
             await store.update_features(txn)
 
-        probe = _make_transaction(user_id=user_id, amount=Decimal("10.00"), ts=now)
+        probe = _make_transaction(
+            user_id=user_id, amount=Decimal("10.00"), ts=now + timedelta(seconds=5)
+        )
         features = await store.get_features(user_id, probe)
 
         assert features.txn_count_1h == 5
