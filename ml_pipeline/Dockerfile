@@ -1,11 +1,6 @@
-FROM python:3.11-slim AS base
+FROM python:3.12-slim AS builder
 
 LABEL maintainer="fraud-detection-platform"
-
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
 
 WORKDIR /app
 
@@ -17,28 +12,33 @@ RUN apt-get update && \
         curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Python dependencies
 COPY pyproject.toml ./
-RUN pip install --no-cache-dir \
-    xgboost>=2.0.0 \
-    scikit-learn>=1.4.0 \
-    numpy>=1.26.0 \
-    pandas>=2.2.0 \
-    pyarrow>=15.0.0 \
-    structlog>=24.1.0 \
-    orjson>=3.9.0 \
-    pydantic>=2.0 \
-    optuna>=3.5.0 \
-    mlflow>=2.11.0 \
-    shap>=0.45.0 \
-    imbalanced-learn>=0.12.0 \
-    plotly>=5.20.0
+COPY shared/ ./shared/
 
-# Copy source code
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir .
+
+FROM python:3.12-slim AS runtime
+
+WORKDIR /app
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends libgomp1 && \
+    rm -rf /var/lib/apt/lists/* && \
+    groupadd -r appuser && useradd -r -g appuser appuser
+
+COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+
 COPY shared/ shared/
 COPY feature_store/ feature_store/
 COPY ml_pipeline/ ml_pipeline/
 COPY scripts/ scripts/
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+USER appuser
 
 # Default: run XGBoost training
 ENTRYPOINT ["python", "-m"]

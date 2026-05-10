@@ -1,5 +1,5 @@
 # ---------- builder ----------
-FROM python:3.11-slim AS builder
+FROM python:3.12-slim AS builder
 
 WORKDIR /app
 
@@ -9,13 +9,12 @@ RUN apt-get update && \
 
 COPY pyproject.toml ./
 COPY shared/ ./shared/
-COPY simulator/ ./simulator/
 
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir .
 
 # ---------- runtime ----------
-FROM python:3.11-slim AS runtime
+FROM python:3.12-slim AS runtime
 
 WORKDIR /app
 
@@ -24,7 +23,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* && \
     groupadd -r appuser && useradd -r -g appuser appuser
 
-COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 COPY shared/ ./shared/
 COPY simulator/ ./simulator/
