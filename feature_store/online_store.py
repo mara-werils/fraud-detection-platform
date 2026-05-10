@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 import math
-import time
 from decimal import Decimal
-from typing import Any
 from uuid import UUID
 
 import redis.asyncio as aioredis
@@ -40,7 +38,9 @@ def _haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
 class OnlineFeatureStore:
     """Manages real-time feature computation and retrieval backed by Redis."""
 
-    def __init__(self, redis_url: str, max_connections: int = 20, socket_timeout: float = 5.0) -> None:
+    def __init__(
+        self, redis_url: str, max_connections: int = 20, socket_timeout: float = 5.0
+    ) -> None:
         self._redis_url = redis_url
         self._max_connections = max_connections
         self._socket_timeout = socket_timeout
@@ -96,7 +96,9 @@ class OnlineFeatureStore:
         async with self._redis.pipeline(transaction=False) as pipe:
             await self._update_velocity(pipe, user_id, amount, now_ts)
             await self._update_amount_stats(pipe, user_id, amount)
-            await self._update_geo(pipe, user_id, transaction.latitude, transaction.longitude, now_ts)
+            await self._update_geo(
+                pipe, user_id, transaction.latitude, transaction.longitude, now_ts
+            )
             await self._update_device(pipe, user_id, transaction.device_id)
             await self._update_merchant(pipe, user_id, transaction.merchant_id, now_ts)
 
@@ -109,7 +111,9 @@ class OnlineFeatureStore:
 
             await pipe.execute()
 
-        await logger.adebug("features_updated", user_id=user_id, txn_id=str(transaction.transaction_id))
+        await logger.adebug(
+            "features_updated", user_id=user_id, txn_id=str(transaction.transaction_id)
+        )
 
     async def get_features(self, user_id: UUID, transaction: Transaction) -> FeatureVector:
         """Retrieve the current feature vector for a user/transaction pair."""
@@ -122,7 +126,7 @@ class OnlineFeatureStore:
 
         async with self._redis.pipeline(transaction=False) as pipe:
             # Velocity counts and sums per window
-            for window_name, window_secs in _WINDOWS.items():
+            for _window_name, window_secs in _WINDOWS.items():
                 min_score = now_ts - window_secs
                 pipe.zcount(f"user:{uid}:velocity", min_score, now_ts)
                 pipe.zrangebyscore(f"user:{uid}:velocity", min_score, now_ts)
@@ -184,7 +188,6 @@ class OnlineFeatureStore:
         idx += 1
 
         # Devices
-        device_count: int = results[idx] or 0
         idx += 1
         is_new_device_raw = results[idx]
         is_new_device = not bool(is_new_device_raw) if transaction.device_id else False
@@ -209,14 +212,13 @@ class OnlineFeatureStore:
         # Compute amount stats
         running_avg = float(stats.get("avg", "0"))
         running_max = float(stats.get("max", "0"))
-        running_sum = float(stats.get("sum", "0"))
         running_count = int(stats.get("count", "0"))
         running_sq_sum = float(stats.get("sq_sum", "0"))
 
         # Z-score
         amount_zscore = 0.0
         if running_count > 1:
-            variance = (running_sq_sum / running_count) - (running_avg ** 2)
+            variance = (running_sq_sum / running_count) - (running_avg**2)
             stddev = math.sqrt(max(variance, 0))
             if stddev > 0:
                 amount_zscore = (amount - running_avg) / stddev
@@ -225,16 +227,20 @@ class OnlineFeatureStore:
 
         # Geo — distance from last
         distance_from_last = 0.0
-        distance_from_home = 0.0
+        _distance_from_home = 0.0
         if transaction.latitude is not None and transaction.longitude is not None:
             last_lat = float(geo.get("last_lat", "0"))
             last_lon = float(geo.get("last_lon", "0"))
             if last_lat != 0.0 or last_lon != 0.0:
-                distance_from_last = _haversine(last_lat, last_lon, transaction.latitude, transaction.longitude)
+                distance_from_last = _haversine(
+                    last_lat, last_lon, transaction.latitude, transaction.longitude
+                )
             home_lat = float(geo.get("home_lat", "0"))
             home_lon = float(geo.get("home_lon", "0"))
             if home_lat != 0.0 or home_lon != 0.0:
-                distance_from_home = _haversine(home_lat, home_lon, transaction.latitude, transaction.longitude)
+                _distance_from_home = _haversine(
+                    home_lat, home_lon, transaction.latitude, transaction.longitude
+                )
 
         # Compute windowed averages and maxes
         def _window_avg(window: str) -> Decimal:

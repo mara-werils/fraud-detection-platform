@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import asyncio
 import time
-from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
@@ -56,10 +55,10 @@ understandable by a non-technical fraud analyst.
 - User ID: {transaction.user_id}
 - Amount: ${transaction.amount} {transaction.currency}
 - Type: {transaction.transaction_type.value}
-- Merchant: {transaction.merchant_id or 'N/A'}
+- Merchant: {transaction.merchant_id or "N/A"}
 - Timestamp: {transaction.timestamp.isoformat()}
-- Device ID: {transaction.device_id or 'N/A'}
-- IP Address: {transaction.ip_address or 'N/A'}
+- Device ID: {transaction.device_id or "N/A"}
+- IP Address: {transaction.ip_address or "N/A"}
 
 ## Feature Signals
 - Transactions in last hour: {features.txn_count_1h}
@@ -73,7 +72,7 @@ understandable by a non-technical fraud analyst.
 - Unique countries (24h): {features.unique_countries_24h}
 
 ## Model Scores
-{chr(10).join(f'- {name}: {score:.4f}' for name, score in scores.items())}
+{chr(10).join(f"- {name}: {score:.4f}" for name, score in scores.items())}
 
 ## Decision: {decision.upper()}
 
@@ -114,9 +113,7 @@ def generate_template_explanation(
     if avg > 0:
         ratio = amount / avg
         if ratio > 1.5:
-            signals.append(
-                f"amount (${amount:,.0f}) is {ratio:.1f}x above average (${avg:,.0f})"
-            )
+            signals.append(f"amount (${amount:,.0f}) is {ratio:.1f}x above average (${avg:,.0f})")
 
     # New device
     if features.is_new_device:
@@ -133,9 +130,7 @@ def generate_template_explanation(
 
     # International
     if features.unique_countries_24h > 1:
-        signals.append(
-            f"activity across {features.unique_countries_24h} countries in 24h"
-        )
+        signals.append(f"activity across {features.unique_countries_24h} countries in 24h")
 
     # New merchant
     if features.is_new_merchant:
@@ -290,9 +285,7 @@ class LLMExplainer:
             return cached
 
         # 2. Try LLM
-        explanation = await self._generate_llm_explanation(
-            transaction, features, scores, decision
-        )
+        explanation = await self._generate_llm_explanation(transaction, features, scores, decision)
 
         # 3. Cache the result
         await self._set_cached(transaction.transaction_id, explanation)
@@ -308,17 +301,13 @@ class LLMExplainer:
         """Attempt LLM generation, falling back to template on failure."""
         # Quick check: if we already know the client is unavailable, skip
         if self._client_available is False:
-            return generate_template_explanation(
-                transaction, features, scores, decision
-            )
+            return generate_template_explanation(transaction, features, scores, decision)
 
         try:
             client = self._get_client()
         except RuntimeError:
             logger.warning("llm_client_unavailable", reason="no_api_key_or_sdk")
-            return generate_template_explanation(
-                transaction, features, scores, decision
-            )
+            return generate_template_explanation(transaction, features, scores, decision)
 
         prompt = _build_prompt(transaction, features, scores, decision)
 
@@ -343,7 +332,7 @@ class LLMExplainer:
             )
             return explanation
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logger.warning(
                 "llm_explanation_timeout",
                 txn_id=str(transaction.transaction_id),
@@ -356,6 +345,4 @@ class LLMExplainer:
             )
 
         # Fallback to template
-        return generate_template_explanation(
-            transaction, features, scores, decision
-        )
+        return generate_template_explanation(transaction, features, scores, decision)

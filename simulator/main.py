@@ -13,7 +13,6 @@ import structlog
 
 from shared.kafka_utils import KafkaProducerWrapper
 from shared.logging import setup_logging
-
 from simulator.config import SimulatorConfig
 from simulator.fraud_patterns import generate_fraud_transactions
 from simulator.generators import UserProfile, build_user_pool, generate_legitimate_transaction
@@ -36,7 +35,9 @@ async def run_simulator(
     if config is None:
         config = SimulatorConfig()
 
-    setup_logging(service_name="simulator", log_level=config.log_level, log_format=config.log_format)
+    setup_logging(
+        service_name="simulator", log_level=config.log_level, log_format=config.log_format
+    )
     logger: structlog.stdlib.BoundLogger = structlog.get_logger("simulator.main")
 
     await logger.ainfo(
@@ -67,7 +68,6 @@ async def run_simulator(
     loop = asyncio.get_running_loop()
 
     def _signal_handler(sig: signal.Signals) -> None:
-        logger_sync = structlog.get_logger("simulator.main")
         # Cannot await in a signal handler callback registered via add_signal_handler,
         # so we just set the event and let the main loop clean up.
         shutdown_event.set()
@@ -165,7 +165,7 @@ async def run_simulator(
             if sleep_time > 0:
                 try:
                     await asyncio.wait_for(shutdown_event.wait(), timeout=sleep_time)
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     pass  # Normal -- timeout means we continue to next tick
 
     except Exception:

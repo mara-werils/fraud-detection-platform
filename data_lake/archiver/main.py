@@ -6,10 +6,9 @@ from __future__ import annotations
 
 import asyncio
 import io
-import json
 import time
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import orjson
@@ -18,11 +17,11 @@ import pyarrow.parquet as pq
 import structlog
 from minio import Minio
 
+from data_lake.archiver.config import ArchiverConfig
 from shared.kafka_utils import (
     KafkaConsumerWrapper,
     setup_graceful_shutdown,
 )
-from data_lake.archiver.config import ArchiverConfig
 
 logger = structlog.get_logger(__name__)
 
@@ -32,7 +31,9 @@ logger = structlog.get_logger(__name__)
 # ---------------------------------------------------------------------------
 
 
-def _delta_add_action(path: str, size: int, partition_values: dict[str, str], timestamp_ms: int) -> dict[str, Any]:
+def _delta_add_action(
+    path: str, size: int, partition_values: dict[str, str], timestamp_ms: int
+) -> dict[str, Any]:
     """Build a Delta Lake ``add`` action entry."""
     return {
         "add": {
@@ -197,7 +198,7 @@ class DataLakeArchiver:
 
     def _write_parquet(self, messages: list[dict[str, Any]]) -> None:
         """Serialize messages to Parquet and upload to MinIO (blocking)."""
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         partition = f"year={now.year}/month={now.month:02d}/day={now.day:02d}"
         file_id = uuid.uuid4().hex[:12]
         file_name = f"part-{file_id}.parquet"

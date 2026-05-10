@@ -26,8 +26,14 @@ except ImportError:
 # ---------------------------------------------------------------------------
 
 CATEGORIES = [
-    "groceries", "electronics", "restaurants", "gas",
-    "travel", "entertainment", "healthcare", "utilities",
+    "groceries",
+    "electronics",
+    "restaurants",
+    "gas",
+    "travel",
+    "entertainment",
+    "healthcare",
+    "utilities",
 ]
 
 CHANNELS = ["mobile_app", "web", "pos_terminal", "atm"]
@@ -49,16 +55,33 @@ CITIES = [
 ]
 
 MERCHANT_NAMES = [
-    "FreshMart", "TechZone", "TheGoldenFork", "QuickFuel", "SkyWings",
-    "CinePlex", "MedCare", "PowerGrid", "GadgetWorld", "BluePlate",
-    "SpeedGas", "OceanCruise", "GameVault", "HealthFirst", "AquaSupply",
-    "ByteShop", "UrbanBites", "NomadTravel", "StreamNow", "PharmaCo",
+    "FreshMart",
+    "TechZone",
+    "TheGoldenFork",
+    "QuickFuel",
+    "SkyWings",
+    "CinePlex",
+    "MedCare",
+    "PowerGrid",
+    "GadgetWorld",
+    "BluePlate",
+    "SpeedGas",
+    "OceanCruise",
+    "GameVault",
+    "HealthFirst",
+    "AquaSupply",
+    "ByteShop",
+    "UrbanBites",
+    "NomadTravel",
+    "StreamNow",
+    "PharmaCo",
 ]
 
 
 # ---------------------------------------------------------------------------
 # Data generators
 # ---------------------------------------------------------------------------
+
 
 def generate_transactions(
     n: int,
@@ -80,8 +103,7 @@ def generate_transactions(
 
         is_fraud = 1 if random.random() < 0.02 else 0
         fraud_score = (
-            round(random.uniform(0.7, 0.99), 4) if is_fraud
-            else round(random.uniform(0.01, 0.3), 4)
+            round(random.uniform(0.7, 0.99), 4) if is_fraud else round(random.uniform(0.01, 0.3), 4)
         )
         xgb_score = round(fraud_score + random.uniform(-0.05, 0.05), 4)
         xgb_score = max(0.0, min(1.0, xgb_score))
@@ -110,28 +132,30 @@ def generate_transactions(
             "unique_merchants_24h": float(random.randint(1, 15)),
         }
 
-        rows.append({
-            "txn_id": uuid4(),
-            "user_id": user_id,
-            "merchant_id": merchant_id,
-            "amount": Decimal(str(amount)),
-            "currency": random.choice(CURRENCIES),
-            "category": random.choice(CATEGORIES),
-            "channel": random.choice(CHANNELS),
-            "ip_address": ".".join(ip_parts),
-            "device_fingerprint": uuid4().hex[:16],
-            "geo_lat": geo_lat,
-            "geo_lon": geo_lon,
-            "fraud_score": fraud_score,
-            "xgboost_score": xgb_score,
-            "gnn_score": gnn_score,
-            "decision": decision,
-            "explanation": f"Score={fraud_score:.2f}" if is_fraud else "",
-            "is_fraud": is_fraud,
-            "features": features,
-            "created_at": created_at,
-            "scored_at": created_at + timedelta(milliseconds=random.randint(20, 200)),
-        })
+        rows.append(
+            {
+                "txn_id": uuid4(),
+                "user_id": user_id,
+                "merchant_id": merchant_id,
+                "amount": Decimal(str(amount)),
+                "currency": random.choice(CURRENCIES),
+                "category": random.choice(CATEGORIES),
+                "channel": random.choice(CHANNELS),
+                "ip_address": ".".join(ip_parts),
+                "device_fingerprint": uuid4().hex[:16],
+                "geo_lat": geo_lat,
+                "geo_lon": geo_lon,
+                "fraud_score": fraud_score,
+                "xgboost_score": xgb_score,
+                "gnn_score": gnn_score,
+                "decision": decision,
+                "explanation": f"Score={fraud_score:.2f}" if is_fraud else "",
+                "is_fraud": is_fraud,
+                "features": features,
+                "created_at": created_at,
+                "scored_at": created_at + timedelta(milliseconds=random.randint(20, 200)),
+            }
+        )
 
     return rows
 
@@ -147,21 +171,23 @@ def generate_user_profiles(user_ids: list[UUID]) -> list[dict]:
         avg_amount = round(random.uniform(20.0, 500.0), 2)
         city = random.choice(CITIES)
 
-        rows.append({
-            "user_id": uid,
-            "total_txn_count": total_txn,
-            "total_txn_amount": Decimal(str(round(avg_amount * total_txn, 2))),
-            "avg_txn_amount": Decimal(str(avg_amount)),
-            "fraud_count": fraud_count,
-            "fraud_rate": round(fraud_count / max(total_txn, 1), 6),
-            "first_txn_date": (now - timedelta(days=random.randint(180, 730))).date(),
-            "last_txn_date": (now - timedelta(days=random.randint(0, 30))).date(),
-            "unique_merchants": random.randint(3, 100),
-            "unique_devices": random.randint(1, 5),
-            "primary_geo": f"{city[2]}",
-            "risk_tier": random.choices(RISK_TIERS, weights=[0.7, 0.2, 0.1], k=1)[0],
-            "updated_at": now,
-        })
+        rows.append(
+            {
+                "user_id": uid,
+                "total_txn_count": total_txn,
+                "total_txn_amount": Decimal(str(round(avg_amount * total_txn, 2))),
+                "avg_txn_amount": Decimal(str(avg_amount)),
+                "fraud_count": fraud_count,
+                "fraud_rate": round(fraud_count / max(total_txn, 1), 6),
+                "first_txn_date": (now - timedelta(days=random.randint(180, 730))).date(),
+                "last_txn_date": (now - timedelta(days=random.randint(0, 30))).date(),
+                "unique_merchants": random.randint(3, 100),
+                "unique_devices": random.randint(1, 5),
+                "primary_geo": f"{city[2]}",
+                "risk_tier": random.choices(RISK_TIERS, weights=[0.7, 0.2, 0.1], k=1)[0],
+                "updated_at": now,
+            }
+        )
 
     return rows
 
@@ -176,17 +202,19 @@ def generate_merchant_profiles(merchant_ids: list[UUID]) -> list[dict]:
         total_txn = random.randint(100, 50000)
         fraud_count = random.randint(0, max(1, total_txn // 100))
 
-        rows.append({
-            "merchant_id": mid,
-            "name": name,
-            "category": random.choice(CATEGORIES),
-            "total_txn": total_txn,
-            "fraud_count": fraud_count,
-            "fraud_rate": round(fraud_count / max(total_txn, 1), 6),
-            "avg_txn_amount": Decimal(str(round(random.uniform(15.0, 800.0), 2))),
-            "risk_tier": random.choices(RISK_TIERS, weights=[0.6, 0.25, 0.15], k=1)[0],
-            "updated_at": now,
-        })
+        rows.append(
+            {
+                "merchant_id": mid,
+                "name": name,
+                "category": random.choice(CATEGORIES),
+                "total_txn": total_txn,
+                "fraud_count": fraud_count,
+                "fraud_rate": round(fraud_count / max(total_txn, 1), 6),
+                "avg_txn_amount": Decimal(str(round(random.uniform(15.0, 800.0), 2))),
+                "risk_tier": random.choices(RISK_TIERS, weights=[0.6, 0.25, 0.15], k=1)[0],
+                "updated_at": now,
+            }
+        )
 
     return rows
 
@@ -195,13 +223,30 @@ def generate_merchant_profiles(merchant_ids: list[UUID]) -> list[dict]:
 # Insert helpers
 # ---------------------------------------------------------------------------
 
+
 def insert_transactions(client: clickhouse_connect.driver.Client, rows: list[dict]) -> None:
     """Insert transactions into ClickHouse."""
     columns = [
-        "txn_id", "user_id", "merchant_id", "amount", "currency", "category",
-        "channel", "ip_address", "device_fingerprint", "geo_lat", "geo_lon",
-        "fraud_score", "xgboost_score", "gnn_score", "decision", "explanation",
-        "is_fraud", "features", "created_at", "scored_at",
+        "txn_id",
+        "user_id",
+        "merchant_id",
+        "amount",
+        "currency",
+        "category",
+        "channel",
+        "ip_address",
+        "device_fingerprint",
+        "geo_lat",
+        "geo_lon",
+        "fraud_score",
+        "xgboost_score",
+        "gnn_score",
+        "decision",
+        "explanation",
+        "is_fraud",
+        "features",
+        "created_at",
+        "scored_at",
     ]
     data = [[row[c] for c in columns] for row in rows]
     client.insert("transactions", data, column_names=columns)
@@ -210,9 +255,18 @@ def insert_transactions(client: clickhouse_connect.driver.Client, rows: list[dic
 def insert_user_profiles(client: clickhouse_connect.driver.Client, rows: list[dict]) -> None:
     """Insert user profiles into ClickHouse."""
     columns = [
-        "user_id", "total_txn_count", "total_txn_amount", "avg_txn_amount",
-        "fraud_count", "fraud_rate", "first_txn_date", "last_txn_date",
-        "unique_merchants", "unique_devices", "primary_geo", "risk_tier",
+        "user_id",
+        "total_txn_count",
+        "total_txn_amount",
+        "avg_txn_amount",
+        "fraud_count",
+        "fraud_rate",
+        "first_txn_date",
+        "last_txn_date",
+        "unique_merchants",
+        "unique_devices",
+        "primary_geo",
+        "risk_tier",
         "updated_at",
     ]
     data = [[row[c] for c in columns] for row in rows]
@@ -222,8 +276,15 @@ def insert_user_profiles(client: clickhouse_connect.driver.Client, rows: list[di
 def insert_merchant_profiles(client: clickhouse_connect.driver.Client, rows: list[dict]) -> None:
     """Insert merchant profiles into ClickHouse."""
     columns = [
-        "merchant_id", "name", "category", "total_txn", "fraud_count",
-        "fraud_rate", "avg_txn_amount", "risk_tier", "updated_at",
+        "merchant_id",
+        "name",
+        "category",
+        "total_txn",
+        "fraud_count",
+        "fraud_rate",
+        "avg_txn_amount",
+        "risk_tier",
+        "updated_at",
     ]
     data = [[row[c] for c in columns] for row in rows]
     client.insert("merchant_profiles", data, column_names=columns)
@@ -232,6 +293,7 @@ def insert_merchant_profiles(client: clickhouse_connect.driver.Client, rows: lis
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Seed ClickHouse with sample data")

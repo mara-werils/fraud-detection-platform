@@ -233,17 +233,13 @@ class AlertService:
             if f.unique_countries_24h > 3:
                 top_features.append(f"Unique countries (24h): {f.unique_countries_24h}")
             if f.distance_from_last_txn_km > 500:
-                top_features.append(
-                    f"Distance from last txn: {f.distance_from_last_txn_km:.0f} km"
-                )
+                top_features.append(f"Distance from last txn: {f.distance_from_last_txn_km:.0f} km")
             if f.is_new_device:
                 top_features.append("New device detected")
             if f.is_new_merchant:
                 top_features.append("New merchant")
             if f.time_since_last_txn_seconds < 60:
-                top_features.append(
-                    f"Time since last txn: {f.time_since_last_txn_seconds:.0f}s"
-                )
+                top_features.append(f"Time since last txn: {f.time_since_last_txn_seconds:.0f}s")
 
             extra["top_features"] = top_features
 

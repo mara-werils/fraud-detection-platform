@@ -10,7 +10,8 @@ import orjson
 import structlog
 from redis.asyncio import Redis
 
-from shared.kafka_utils import KafkaConsumerWrapper, KafkaProducerWrapper
+from scoring.models.ensemble import Decision, EnsembleScorer
+from shared.kafka_utils import KafkaProducerWrapper
 from shared.metrics import MetricsRegistry
 from shared.schemas import (
     AlertEvent,
@@ -19,8 +20,6 @@ from shared.schemas import (
     ScoredTransaction,
     Transaction,
 )
-
-from scoring.models.ensemble import Decision, EnsembleScorer
 
 logger = structlog.get_logger(__name__)
 
@@ -101,22 +100,16 @@ async def handle_message(
     start = time.perf_counter()
 
     transaction = Transaction.model_validate(message)
-    metrics.transactions_received.labels(
-        transaction_type=transaction.transaction_type.value
-    ).inc()
+    metrics.transactions_received.labels(transaction_type=transaction.transaction_type.value).inc()
 
-    features = await _fetch_features(
-        redis, transaction.user_id, transaction.transaction_id
-    )
+    features = await _fetch_features(redis, transaction.user_id, transaction.transaction_id)
 
     scored = scorer.score(transaction, features)
 
     metrics.transactions_scored.labels(model_version=scored.model_version).inc()
 
     scoring_duration = time.perf_counter() - start
-    metrics.scoring_latency.labels(model_version=scored.model_version).observe(
-        scoring_duration
-    )
+    metrics.scoring_latency.labels(model_version=scored.model_version).observe(scoring_duration)
 
     # Publish scored transaction
     publish_start = time.perf_counter()

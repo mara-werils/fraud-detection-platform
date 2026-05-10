@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import math
-from dataclasses import dataclass, field
-from decimal import Decimal
+from dataclasses import dataclass
 
 import structlog
 
@@ -66,9 +64,7 @@ class RuleEngine:
         self.night_score = night_score
         self.international_score = international_score
 
-    def score(
-        self, transaction: Transaction, features: FeatureVector
-    ) -> ScoringResult:
+    def score(self, transaction: Transaction, features: FeatureVector) -> ScoringResult:
         """Score a transaction against all rules.
 
         Args:
@@ -101,9 +97,7 @@ class RuleEngine:
             details=details,
         )
 
-    def rule_high_amount(
-        self, transaction: Transaction, features: FeatureVector
-    ) -> RuleResult:
+    def rule_high_amount(self, transaction: Transaction, features: FeatureVector) -> RuleResult:
         """High amount rule: triggers if amount > multiplier * user average.
 
         Args:
@@ -131,9 +125,7 @@ class RuleEngine:
             detail=f"Amount ratio {ratio:.2f}x vs avg (threshold: {self.high_amount_multiplier}x)",
         )
 
-    def rule_new_device(
-        self, transaction: Transaction, features: FeatureVector
-    ) -> RuleResult:
+    def rule_new_device(self, transaction: Transaction, features: FeatureVector) -> RuleResult:
         """New device rule: triggers if the device has not been seen before.
 
         Args:
@@ -152,9 +144,7 @@ class RuleEngine:
             detail=f"Device {'is new' if triggered else 'is known'}",
         )
 
-    def rule_velocity(
-        self, transaction: Transaction, features: FeatureVector
-    ) -> RuleResult:
+    def rule_velocity(self, transaction: Transaction, features: FeatureVector) -> RuleResult:
         """Velocity rule: triggers if >N transactions in the last hour.
 
         Args:
@@ -173,9 +163,7 @@ class RuleEngine:
             detail=f"{features.txn_count_1h} txns in 1h (threshold: {self.velocity_threshold})",
         )
 
-    def rule_geo_anomaly(
-        self, transaction: Transaction, features: FeatureVector
-    ) -> RuleResult:
+    def rule_geo_anomaly(self, transaction: Transaction, features: FeatureVector) -> RuleResult:
         """Geo anomaly rule: triggers if distance from last txn exceeds threshold.
 
         Args:
@@ -217,9 +205,7 @@ class RuleEngine:
             detail=f"Transaction at {hour:02d}:00 ({'night window' if triggered else 'normal hours'})",
         )
 
-    def rule_international(
-        self, transaction: Transaction, features: FeatureVector
-    ) -> RuleResult:
+    def rule_international(self, transaction: Transaction, features: FeatureVector) -> RuleResult:
         """International transaction rule: triggers on unexpected international activity.
 
         Uses unique_countries_24h > 1 as a proxy for unexpected international

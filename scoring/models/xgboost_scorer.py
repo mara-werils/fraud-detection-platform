@@ -11,9 +11,8 @@ import numpy as np
 import structlog
 from prometheus_client import Histogram
 
-from shared.schemas import FeatureVector, Transaction
-
 from scoring.models.rule_engine import RuleEngine, ScoringResult
+from shared.schemas import FeatureVector, Transaction
 
 logger = structlog.get_logger(__name__)
 
@@ -216,9 +215,7 @@ class XGBoostScorer:
         import xgboost as xgb
 
         arr = _feature_vector_to_array(features)
-        dmatrix = xgb.DMatrix(
-            arr.reshape(1, -1), feature_names=list(XGBOOST_FEATURE_ORDER)
-        )
+        dmatrix = xgb.DMatrix(arr.reshape(1, -1), feature_names=list(XGBOOST_FEATURE_ORDER))
 
         start = time.perf_counter()
         preds = self._model.predict(dmatrix)  # type: ignore[union-attr]
@@ -237,9 +234,8 @@ class XGBoostScorer:
         """
         from datetime import datetime
         from decimal import Decimal
-        from uuid import uuid4
 
-        from shared.schemas import Transaction, TransactionType
+        from shared.schemas import TransactionType
 
         dummy_txn = Transaction(
             transaction_id=features.transaction_id,

@@ -21,9 +21,7 @@ router = APIRouter()
 
 
 @router.post("/score", response_model=ScoredTransaction)
-async def score_transaction(
-    transaction: Transaction, request: Request
-) -> ScoredTransaction:
+async def score_transaction(transaction: Transaction, request: Request) -> ScoredTransaction:
     """Synchronous scoring endpoint.
 
     Accepts a Transaction JSON payload, scores it using the loaded model,
@@ -94,9 +92,8 @@ async def health_check(request: Request) -> dict[str, Any]:
     redis = request.app.state.redis
     scorer = request.app.state.scorer
 
-    kafka_healthy = (
-        (consumer is not None and consumer.is_healthy)
-        and (producer is not None and producer.is_healthy)
+    kafka_healthy = (consumer is not None and consumer.is_healthy) and (
+        producer is not None and producer.is_healthy
     )
 
     redis_healthy = False
@@ -174,9 +171,7 @@ async def model_info(request: Request) -> dict[str, Any]:
         "total_scored": scorer.total_scored,
         "total_flagged": scorer.total_flagged,
         "flag_rate": (
-            scorer.total_flagged / scorer.total_scored
-            if scorer.total_scored > 0
-            else 0.0
+            scorer.total_flagged / scorer.total_scored if scorer.total_scored > 0 else 0.0
         ),
     }
 

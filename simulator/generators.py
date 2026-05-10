@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import random
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from typing import Final
 from uuid import UUID, uuid4
@@ -71,46 +71,90 @@ CITIES: Final[list[tuple[float, float, str, str, int]]] = [
 # Merchant name templates per category
 MERCHANT_TEMPLATES: Final[dict[str, list[str]]] = {
     "groceries": [
-        "FreshMart #{id}", "GreenGrocer #{id}", "SuperSave #{id}",
-        "DailyBasket #{id}", "OrganicHub #{id}",
+        "FreshMart #{id}",
+        "GreenGrocer #{id}",
+        "SuperSave #{id}",
+        "DailyBasket #{id}",
+        "OrganicHub #{id}",
     ],
     "electronics": [
-        "TechZone #{id}", "GadgetWorld #{id}", "ByteShop #{id}",
-        "CircuitCity #{id}", "PixelStore #{id}",
+        "TechZone #{id}",
+        "GadgetWorld #{id}",
+        "ByteShop #{id}",
+        "CircuitCity #{id}",
+        "PixelStore #{id}",
     ],
     "restaurants": [
-        "TheGoldenFork #{id}", "BluePlate #{id}", "UrbanBites #{id}",
-        "SavorKitchen #{id}", "SpiceRoute #{id}",
+        "TheGoldenFork #{id}",
+        "BluePlate #{id}",
+        "UrbanBites #{id}",
+        "SavorKitchen #{id}",
+        "SpiceRoute #{id}",
     ],
     "gas": [
-        "QuickFuel #{id}", "SpeedGas #{id}", "GreenPump #{id}",
-        "RoadRunner #{id}", "FillUp #{id}",
+        "QuickFuel #{id}",
+        "SpeedGas #{id}",
+        "GreenPump #{id}",
+        "RoadRunner #{id}",
+        "FillUp #{id}",
     ],
     "travel": [
-        "SkyWings #{id}", "OceanCruise #{id}", "NomadTravel #{id}",
-        "JetSet #{id}", "GlobalHotel #{id}",
+        "SkyWings #{id}",
+        "OceanCruise #{id}",
+        "NomadTravel #{id}",
+        "JetSet #{id}",
+        "GlobalHotel #{id}",
     ],
     "entertainment": [
-        "CinePlex #{id}", "GameVault #{id}", "StreamNow #{id}",
-        "LiveNation #{id}", "FunPark #{id}",
+        "CinePlex #{id}",
+        "GameVault #{id}",
+        "StreamNow #{id}",
+        "LiveNation #{id}",
+        "FunPark #{id}",
     ],
     "healthcare": [
-        "MedCare #{id}", "HealthFirst #{id}", "PharmaCo #{id}",
-        "WellnessHub #{id}", "LifeClinic #{id}",
+        "MedCare #{id}",
+        "HealthFirst #{id}",
+        "PharmaCo #{id}",
+        "WellnessHub #{id}",
+        "LifeClinic #{id}",
     ],
     "utilities": [
-        "PowerGrid #{id}", "AquaSupply #{id}", "TelcoPlus #{id}",
-        "NetConnect #{id}", "GasCorp #{id}",
+        "PowerGrid #{id}",
+        "AquaSupply #{id}",
+        "TelcoPlus #{id}",
+        "NetConnect #{id}",
+        "GasCorp #{id}",
     ],
 }
 
 # Hourly transaction probability weights (index 0 = midnight, 23 = 11 PM)
 # Peaks during business hours and early evening.
 HOUR_WEIGHTS: Final[list[float]] = [
-    0.02, 0.01, 0.01, 0.01, 0.01, 0.02,  # 0-5
-    0.03, 0.05, 0.07, 0.08, 0.09, 0.09,  # 6-11
-    0.10, 0.09, 0.08, 0.07, 0.06, 0.05,  # 12-17
-    0.04, 0.04, 0.03, 0.03, 0.02, 0.02,  # 18-23
+    0.02,
+    0.01,
+    0.01,
+    0.01,
+    0.01,
+    0.02,  # 0-5
+    0.03,
+    0.05,
+    0.07,
+    0.08,
+    0.09,
+    0.09,  # 6-11
+    0.10,
+    0.09,
+    0.08,
+    0.07,
+    0.06,
+    0.05,  # 12-17
+    0.04,
+    0.04,
+    0.03,
+    0.03,
+    0.02,
+    0.02,  # 18-23
 ]
 
 
@@ -160,7 +204,7 @@ def build_user_pool(size: int) -> list[UserProfile]:
         List of ``UserProfile`` instances.
     """
     users: list[UserProfile] = []
-    for i in range(size):
+    for _ in range(size):
         city = random.choice(CITIES)
         # Each user prefers 2-4 categories
         n_cats = random.randint(2, 4)

@@ -29,7 +29,7 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 
-from ml_pipeline.data_prep import FEATURE_PREFIX, LABEL_COL
+from ml_pipeline.data_prep import LABEL_COL
 from ml_pipeline.feature_engineering import ALL_FEATURE_NAMES, engineer_features
 
 log = structlog.get_logger(__name__)
@@ -173,8 +173,7 @@ def compute_shap_importance(
 
         importance = np.abs(shap_values).mean(axis=0)
         result = {
-            feature_names[i]: round(float(importance[i]), 6)
-            for i in range(len(feature_names))
+            feature_names[i]: round(float(importance[i]), 6) for i in range(len(feature_names))
         }
         result = dict(sorted(result.items(), key=lambda x: x[1], reverse=True))
         log.info("shap_importance_computed", n_features=len(result))
@@ -316,7 +315,11 @@ def evaluate_model(
     report["calibration"] = compute_calibration(y, y_prob)
     report["latency"] = benchmark_latency(model, X)
 
-    log.info("evaluation_complete", auc_roc=report["metrics"]["auc_roc"], pr_auc=report["metrics"]["pr_auc"])
+    log.info(
+        "evaluation_complete",
+        auc_roc=report["metrics"]["auc_roc"],
+        pr_auc=report["metrics"]["pr_auc"],
+    )
 
     # --- Save report ---
     if output_path:
@@ -351,21 +354,23 @@ def main() -> None:
 
     # Print summary
     m = report["metrics"]
-    print(f"\n{'='*50}")
+    print(f"\n{'=' * 50}")
     print(f"AUC-ROC:   {m['auc_roc']}")
     print(f"PR-AUC:    {m['pr_auc']}")
     print(f"Precision: {m['precision']}")
     print(f"Recall:    {m['recall']}")
     print(f"F1:        {m['f1']}")
     print(f"Accuracy:  {m['accuracy']}")
-    print(f"{'='*50}")
+    print(f"{'=' * 50}")
 
     cm = report["confusion_matrix"]
     print(f"TP: {cm['TP']}  FP: {cm['FP']}")
     print(f"FN: {cm['FN']}  TN: {cm['TN']}")
 
     lat = report["latency"]
-    print(f"\nLatency: p50={lat['p50_ms']:.2f}ms  p95={lat['p95_ms']:.2f}ms  p99={lat['p99_ms']:.2f}ms")
+    print(
+        f"\nLatency: p50={lat['p50_ms']:.2f}ms  p95={lat['p95_ms']:.2f}ms  p99={lat['p99_ms']:.2f}ms"
+    )
     print(f"\nReport saved to: {output}")
 
 

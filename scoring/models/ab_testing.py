@@ -9,7 +9,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any
 from uuid import UUID
 
@@ -52,9 +52,7 @@ class GroupMetrics:
         """Proportion of actual frauds caught (recall)."""
         if self.total_fraud_caught + self.total_false_positives == 0:
             return 0.0
-        return self.total_fraud_caught / (
-            self.total_fraud_caught + self.total_false_positives
-        )
+        return self.total_fraud_caught / (self.total_fraud_caught + self.total_false_positives)
 
     @property
     def false_positive_rate(self) -> float:
@@ -129,9 +127,7 @@ class ABTestManager:
         self._validate_groups()
 
         # Per-group metrics
-        self._metrics: dict[str, GroupMetrics] = {
-            g.name: GroupMetrics() for g in self._groups
-        }
+        self._metrics: dict[str, GroupMetrics] = {g.name: GroupMetrics() for g in self._groups}
 
         # Background flush task handle
         self._flush_task: asyncio.Task[None] | None = None
@@ -156,8 +152,7 @@ class ABTestManager:
                 )
             if i > 0 and group.range_start != sorted_groups[i - 1].range_end:
                 raise ValueError(
-                    f"Gap or overlap between group '{sorted_groups[i-1].name}' "
-                    f"and '{group.name}'"
+                    f"Gap or overlap between group '{sorted_groups[i - 1].name}' and '{group.name}'"
                 )
 
     # ------------------------------------------------------------------
@@ -259,9 +254,7 @@ class ABTestManager:
         """
         return {
             "experiment": self._experiment_name,
-            "groups": {
-                name: metrics.to_dict() for name, metrics in self._metrics.items()
-            },
+            "groups": {name: metrics.to_dict() for name, metrics in self._metrics.items()},
         }
 
     # ------------------------------------------------------------------

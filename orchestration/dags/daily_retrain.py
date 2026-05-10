@@ -8,11 +8,10 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
+import structlog
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.utils.trigger_rule import TriggerRule
-
-import structlog
 
 logger = structlog.get_logger(__name__)
 
@@ -77,10 +76,21 @@ def export_training_data(**context: object) -> str:
 
     if rows:
         columns = [
-            "transaction_id", "user_id", "amount", "currency",
-            "transaction_type", "merchant_id", "merchant_category",
-            "ip_address", "device_id", "latitude", "longitude",
-            "timestamp", "fraud_score", "is_flagged", "label",
+            "transaction_id",
+            "user_id",
+            "amount",
+            "currency",
+            "transaction_type",
+            "merchant_id",
+            "merchant_category",
+            "ip_address",
+            "device_id",
+            "latitude",
+            "longitude",
+            "timestamp",
+            "fraud_score",
+            "is_flagged",
+            "label",
         ]
         table = pa.table({col: [r[i] for r in rows] for i, col in enumerate(columns)})
         pq.write_table(table, output_path)
@@ -101,7 +111,11 @@ def run_feature_engineering(**context: object) -> str:
     # Basic feature engineering
     df["hour_of_day"] = pd.to_datetime(df["timestamp"]).dt.hour
     df["day_of_week"] = pd.to_datetime(df["timestamp"]).dt.dayofweek
-    df["amount_log"] = df["amount"].apply(lambda x: float(x)).apply(pd.np.log1p if hasattr(pd, "np") else __import__("numpy").log1p)
+    df["amount_log"] = (
+        df["amount"]
+        .apply(lambda x: float(x))
+        .apply(pd.np.log1p if hasattr(pd, "np") else __import__("numpy").log1p)
+    )
     df["is_international"] = df["currency"].apply(lambda c: 0 if c == "USD" else 1)
 
     features_path = data_path.replace(".parquet", "_features.parquet")
@@ -113,24 +127,33 @@ def run_feature_engineering(**context: object) -> str:
 
 def train_xgboost(**context: object) -> str:
     """Train an XGBoost model on the feature-engineered data."""
+    import mlflow
+    import mlflow.xgboost
     import numpy as np
     import pandas as pd
     import xgboost as xgb
-    import mlflow
-    import mlflow.xgboost
 
     ti = context["ti"]  # type: ignore[index]
     features_path: str = ti.xcom_pull(task_ids="run_feature_engineering", key="features_path")
     df = pd.read_parquet(features_path)
 
     feature_cols = [
-        "amount", "hour_of_day", "day_of_week", "amount_log",
-        "is_international", "latitude", "longitude",
+        "amount",
+        "hour_of_day",
+        "day_of_week",
+        "amount_log",
+        "is_international",
+        "latitude",
+        "longitude",
     ]
     existing_cols = [c for c in feature_cols if c in df.columns]
 
     X = df[existing_cols].fillna(0).values.astype(np.float32)
-    y = df["label"].values.astype(np.int32) if "label" in df.columns else np.zeros(len(df), dtype=np.int32)
+    y = (
+        df["label"].values.astype(np.int32)
+        if "label" in df.columns
+        else np.zeros(len(df), dtype=np.int32)
+    )
 
     mlflow.set_tracking_uri(_MLFLOW_TRACKING_URI)
     mlflow.set_experiment("fraud-detection-xgboost")
@@ -166,17 +189,17 @@ def train_xgboost(**context: object) -> str:
 
 def evaluate_model(**context: object) -> dict[str, float]:
     """Evaluate the trained model and compute key metrics."""
+    import mlflow
     import numpy as np
     import pandas as pd
     import xgboost as xgb
     from sklearn.metrics import (
+        average_precision_score,
+        f1_score,
         precision_score,
         recall_score,
-        f1_score,
         roc_auc_score,
-        average_precision_score,
     )
-    import mlflow
 
     ti = context["ti"]  # type: ignore[index]
     model_path: str = ti.xcom_pull(task_ids="train_xgboost", key="model_path")
@@ -185,13 +208,22 @@ def evaluate_model(**context: object) -> dict[str, float]:
 
     df = pd.read_parquet(features_path)
     feature_cols = [
-        "amount", "hour_of_day", "day_of_week", "amount_log",
-        "is_international", "latitude", "longitude",
+        "amount",
+        "hour_of_day",
+        "day_of_week",
+        "amount_log",
+        "is_international",
+        "latitude",
+        "longitude",
     ]
     existing_cols = [c for c in feature_cols if c in df.columns]
 
     X = df[existing_cols].fillna(0).values.astype(np.float32)
-    y = df["label"].values.astype(np.int32) if "label" in df.columns else np.zeros(len(df), dtype=np.int32)
+    y = (
+        df["label"].values.astype(np.int32)
+        if "label" in df.columns
+        else np.zeros(len(df), dtype=np.int32)
+    )
 
     model = xgb.Booster()
     model.load_model(model_path)

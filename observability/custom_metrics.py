@@ -5,7 +5,7 @@ All services import from this module to ensure consistent metric naming
 and labeling across the platform.
 """
 
-from prometheus_client import Counter, Gauge, Histogram, Info, Summary
+from prometheus_client import Counter, Gauge, Histogram, Info
 
 # ---------------------------------------------------------------------------
 # Scoring Service Metrics

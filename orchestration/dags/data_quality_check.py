@@ -8,10 +8,9 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
+import structlog
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-
-import structlog
 
 logger = structlog.get_logger(__name__)
 
@@ -36,6 +35,7 @@ _MAX_DATA_AGE_SECONDS = 600  # 10 minutes
 
 def _get_clickhouse_client():  # type: ignore[no-untyped-def]
     from clickhouse_driver import Client  # type: ignore[import-untyped]
+
     return Client.from_url(_CLICKHOUSE_URL)
 
 
@@ -51,8 +51,12 @@ def check_null_rates(**context: object) -> dict[str, float]:
     one_hour_ago = datetime.utcnow() - timedelta(hours=1)
 
     columns = [
-        "transaction_id", "user_id", "amount", "fraud_score",
-        "model_version", "timestamp",
+        "transaction_id",
+        "user_id",
+        "amount",
+        "fraud_score",
+        "model_version",
+        "timestamp",
     ]
 
     results: dict[str, float] = {}
@@ -110,13 +114,11 @@ def check_fraud_rate_anomaly(**context: object) -> float:
 
     if fraud_rate < _FRAUD_RATE_MIN:
         raise ValueError(
-            f"Fraud rate suspiciously low: {fraud_rate:.4%} "
-            f"(min threshold {_FRAUD_RATE_MIN:.4%})"
+            f"Fraud rate suspiciously low: {fraud_rate:.4%} (min threshold {_FRAUD_RATE_MIN:.4%})"
         )
     if fraud_rate > _FRAUD_RATE_MAX:
         raise ValueError(
-            f"Fraud rate suspiciously high: {fraud_rate:.4%} "
-            f"(max threshold {_FRAUD_RATE_MAX:.4%})"
+            f"Fraud rate suspiciously high: {fraud_rate:.4%} (max threshold {_FRAUD_RATE_MAX:.4%})"
         )
 
     structlog.get_logger(__name__).info("fraud_rate_check_passed", fraud_rate=fraud_rate)
@@ -127,9 +129,7 @@ def check_data_freshness(**context: object) -> float:
     """Ensure data is arriving within acceptable latency."""
     ch = _get_clickhouse_client()
 
-    row = ch.execute(
-        "SELECT max(timestamp) FROM fraud.scored_transactions"
-    )
+    row = ch.execute("SELECT max(timestamp) FROM fraud.scored_transactions")
 
     if not row or row[0][0] is None:
         raise ValueError("No data found in scored_transactions table")
@@ -218,5 +218,4 @@ with DAG(
         python_callable=check_schema_validation,
     )
 
-    # All checks run in parallel
-    [t_null_rates, t_fraud_rate, t_freshness, t_schema]
+    # All checks run in parallel (no dependencies needed)

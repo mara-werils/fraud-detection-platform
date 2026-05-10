@@ -8,9 +8,9 @@ Usage::
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Sequence
 
 import numpy as np
 import pandas as pd
@@ -42,6 +42,7 @@ class DataSplit:
 # ---------------------------------------------------------------------------
 # Validation helpers
 # ---------------------------------------------------------------------------
+
 
 def _validate_dataframe(df: pd.DataFrame, feature_cols: list[str]) -> pd.DataFrame:
     """Check for nulls, infinities, and expected distributions."""
@@ -122,6 +123,7 @@ def _apply_smote(
 # Public API
 # ---------------------------------------------------------------------------
 
+
 def load_features(path: str | Path) -> tuple[pd.DataFrame, list[str]]:
     """Load a Parquet file and return (df, feature_column_names)."""
     path = Path(path)
@@ -178,7 +180,8 @@ def prepare_data(
 
     # --- Stratified split: train+val vs test ---
     X_trainval, X_test, y_trainval, y_test = train_test_split(
-        X, y,
+        X,
+        y,
         test_size=test_size,
         stratify=y,
         random_state=random_state,
@@ -187,7 +190,8 @@ def prepare_data(
     # --- Split train+val into train and val ---
     relative_val = val_size / (1.0 - test_size)
     X_train, X_val, y_train, y_val = train_test_split(
-        X_trainval, y_trainval,
+        X_trainval,
+        y_trainval,
         test_size=relative_val,
         stratify=y_trainval,
         random_state=random_state,

@@ -10,9 +10,8 @@ from typing import Any
 
 import structlog
 
-from shared.schemas import FeatureVector, ScoredTransaction, Transaction
-
 from scoring.models.rule_engine import RuleEngine, ScoringResult
+from shared.schemas import FeatureVector, ScoredTransaction, Transaction
 
 logger = structlog.get_logger(__name__)
 
@@ -29,9 +28,7 @@ class BaseScorer(ABC):
     """Abstract base class for fraud scorers."""
 
     @abstractmethod
-    async def score(
-        self, transaction: Transaction, features: FeatureVector
-    ) -> ScoredTransaction:
+    async def score(self, transaction: Transaction, features: FeatureVector) -> ScoredTransaction:
         """Score a transaction and return a ScoredTransaction.
 
         Args:
@@ -139,9 +136,7 @@ class EnsembleScorer(BaseScorer):
     # Scoring
     # ------------------------------------------------------------------
 
-    async def score(
-        self, transaction: Transaction, features: FeatureVector
-    ) -> ScoredTransaction:
+    async def score(self, transaction: Transaction, features: FeatureVector) -> ScoredTransaction:
         """Score a transaction using the full model ensemble.
 
         Collects scores from all available models, applies weighted
@@ -163,9 +158,7 @@ class EnsembleScorer(BaseScorer):
 
         # --- Rule engine (sync, always available) ---
         try:
-            rule_result: ScoringResult = self._rule_engine.score(
-                transaction, features
-            )
+            rule_result: ScoringResult = self._rule_engine.score(transaction, features)
             model_scores["rules"] = rule_result.fraud_score
         except Exception as exc:
             logger.error("ensemble_rule_engine_error", error=str(exc))
@@ -185,9 +178,7 @@ class EnsembleScorer(BaseScorer):
         # --- GNN (async) ---
         if self._gnn_scorer is not None:
             try:
-                gnn_score = await self._gnn_scorer.score(
-                    transaction.user_id, features
-                )
+                gnn_score = await self._gnn_scorer.score(transaction.user_id, features)
                 model_scores["gnn"] = gnn_score
             except Exception as exc:
                 logger.error("ensemble_gnn_error", error=str(exc))
@@ -201,9 +192,7 @@ class EnsembleScorer(BaseScorer):
 
         elapsed_ms = (time.perf_counter() - start) * 1000.0
 
-        decision = self.decide(
-            ensemble_score, self._threshold_block, self._threshold_review
-        )
+        decision = self.decide(ensemble_score, self._threshold_block, self._threshold_review)
 
         is_flagged = decision in (Decision.BLOCK, Decision.REVIEW)
         flag_reason: str | None = None
@@ -256,9 +245,7 @@ class EnsembleScorer(BaseScorer):
         if self._llm_explainer is not None and is_flagged:
             all_scores = {**model_scores, "ensemble": ensemble_score}
             asyncio.create_task(
-                self._generate_explanation(
-                    transaction, features, all_scores, decision.value
-                )
+                self._generate_explanation(transaction, features, all_scores, decision.value)
             )
 
         return scored
@@ -286,9 +273,7 @@ class EnsembleScorer(BaseScorer):
             return 0.5  # neutral fallback
 
         # Calculate total weight of successful models for normalization
-        active_weight_sum = sum(
-            self._weights.get(name, 0.0) for name in model_scores
-        )
+        active_weight_sum = sum(self._weights.get(name, 0.0) for name in model_scores)
 
         if active_weight_sum <= 0:
             # Equal weighting if configured weights are zero

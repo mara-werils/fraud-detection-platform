@@ -14,12 +14,8 @@ from typing import Final
 from uuid import uuid4
 
 from shared.schemas import Transaction, TransactionType
-
 from simulator.generators import (
-    AMOUNT_RANGES,
-    CARD_TYPES,
     CATEGORIES,
-    CITIES,
     MERCHANT_TEMPLATES,
     UserProfile,
     _generate_ip_prefix,
@@ -73,7 +69,7 @@ def generate_card_testing(user: UserProfile) -> list[Transaction]:
     base_time = datetime.utcnow()
     txns: list[Transaction] = []
 
-    for i in range(count):
+    for _ in range(count):
         offset_seconds = random.uniform(0, 60)
         ts = base_time + timedelta(seconds=offset_seconds)
         amount = round(random.uniform(1.0, 5.0), 2)
@@ -336,7 +332,9 @@ def generate_merchant_collusion(user: UserProfile) -> list[Transaction]:
                 transaction_type=TransactionType.TRANSFER,
                 merchant_id=colluding_merchant,
                 merchant_category=category,
-                card_number_hash=user.card_hash if sender == user.user_id else _hash_card(uuid4().hex),
+                card_number_hash=user.card_hash
+                if sender == user.user_id
+                else _hash_card(uuid4().hex),
                 ip_address=f"{_generate_ip_prefix()}.{random.randint(1, 254)}",
                 device_id=f"dev-{uuid4().hex[:12]}",
                 latitude=lat,

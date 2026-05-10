@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
@@ -149,8 +149,7 @@ class EmailNotifier:
     def _build_subject(alerts: list[AlertEvent]) -> str:
         """Build the email subject line."""
         critical_count = sum(
-            1 for a in alerts
-            if a.severity in (AlertSeverity.CRITICAL, AlertSeverity.HIGH)
+            1 for a in alerts if a.severity in (AlertSeverity.CRITICAL, AlertSeverity.HIGH)
         )
         if critical_count > 0:
             return (
@@ -179,7 +178,7 @@ class EmailNotifier:
         Returns:
             HTML string for the email body.
         """
-        now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+        now = datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
 
         rows = []
         for alert in alerts:
