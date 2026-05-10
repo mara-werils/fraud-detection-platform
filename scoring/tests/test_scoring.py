@@ -207,7 +207,7 @@ class TestEnsembleScorer:
         """Scorer should return a valid ScoredTransaction."""
         result = await scorer.score(normal_transaction, normal_features)
         assert result.transaction_id == normal_transaction.transaction_id
-        assert result.model_version == "rule-engine-v1"
+        assert result.model_version == "ensemble-v1"
         assert result.scoring_latency_ms >= 0
         assert 0.0 <= result.fraud_score <= 1.0
 
@@ -280,8 +280,8 @@ class TestAPI:
         response = test_client.get("/model/info")
         assert response.status_code == 200
         data = response.json()
-        assert data["model_version"] == "rule-engine-v1"
-        assert data["model_type"] == "rule-based"
+        assert data["model_version"] == "ensemble-v1"
+        assert data["model_type"] == "ensemble"
 
     def test_metrics_endpoint(self, test_client: TestClient) -> None:
         """GET /metrics should return Prometheus metrics."""
