@@ -34,6 +34,7 @@ function getMarkerColor(score: number): string {
 function FraudMapInner({ transactions }: FraudMapProps) {
   useEffect(() => {
     // Import Leaflet CSS on client side
+    // @ts-ignore
     import("leaflet/dist/leaflet.css");
   }, []);
 
