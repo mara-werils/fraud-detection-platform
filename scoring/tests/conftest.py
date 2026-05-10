@@ -8,7 +8,8 @@ from unittest.mock import AsyncMock, MagicMock
 from uuid import UUID
 
 import pytest
-from fastapi.testclient import TestClient
+from fastapi import FastAPI
+from starlette.testclient import TestClient
 
 from scoring.models.ensemble import EnsembleScorer
 from scoring.models.rule_engine import RuleEngine
@@ -131,22 +132,30 @@ def mock_consumer() -> MagicMock:
 
 
 @pytest.fixture
-def test_client(
+def test_app(
     scorer: EnsembleScorer,
     mock_redis: AsyncMock,
     mock_producer: MagicMock,
     mock_consumer: MagicMock,
-) -> TestClient:
-    """Provide a FastAPI test client with mocked dependencies."""
-    from scoring.main import create_app
+) -> FastAPI:
+    """Provide a FastAPI app with mocked dependencies and no lifespan."""
+    from scoring.api.middleware import setup_middleware
+    from scoring.api.routes import router
 
-    app = create_app()
+    app = FastAPI(title="Test Scoring Service")
+    setup_middleware(app)
+    app.include_router(router)
 
-    # Override lifespan by setting state directly
     app.state.scorer = scorer
     app.state.redis = mock_redis
     app.state.producer = mock_producer
     app.state.consumer = mock_consumer
 
-    with TestClient(app, raise_server_exceptions=False) as client:
+    return app
+
+
+@pytest.fixture
+def test_client(test_app: FastAPI) -> TestClient:
+    """Provide a FastAPI test client with mocked dependencies."""
+    with TestClient(test_app, raise_server_exceptions=False) as client:
         yield client
