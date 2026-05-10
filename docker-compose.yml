@@ -11,6 +11,7 @@ services:
       - .env
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SIMULATOR_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     depends_on:
       kafka:
         condition: service_healthy
@@ -64,6 +65,23 @@ services:
       redis:
         condition: service_healthy
       clickhouse:
+        condition: service_healthy
+    networks:
+      - fraud-network
+    restart: unless-stopped
+
+  dashboard:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+    container_name: fraud-dashboard
+    ports:
+      - "3001:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+      NEXT_PUBLIC_WS_URL: ws://localhost:8000/api/ws/feed
+    depends_on:
+      scoring:
         condition: service_healthy
     networks:
       - fraud-network
