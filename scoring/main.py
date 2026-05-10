@@ -3,16 +3,12 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
 
 import structlog
 from fastapi import FastAPI
 from redis.asyncio import Redis
-
-from shared.kafka_utils import KafkaConsumerWrapper, KafkaProducerWrapper
-from shared.logging import setup_logging
-from shared.metrics import create_metrics
 
 from scoring.api.middleware import setup_middleware
 from scoring.api.routes import router
@@ -20,6 +16,9 @@ from scoring.config import ScoringConfig
 from scoring.consumer import create_consumer_handler
 from scoring.models.ensemble import EnsembleScorer
 from scoring.models.rule_engine import RuleEngine
+from shared.kafka_utils import KafkaConsumerWrapper, KafkaProducerWrapper
+from shared.logging import setup_logging
+from shared.metrics import create_metrics
 
 logger = structlog.get_logger(__name__)
 
@@ -106,9 +105,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             topic_scored=config.kafka_topic_scored,
             topic_alerts=config.kafka_topic_alerts,
         )
-        consumer_task = asyncio.create_task(
-            consumer.consume(handler), name="scoring-consumer"
-        )
+        consumer_task = asyncio.create_task(consumer.consume(handler), name="scoring-consumer")
     except Exception:
         await logger.awarning("kafka_consumer_start_failed")
         consumer = None

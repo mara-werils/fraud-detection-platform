@@ -8,10 +8,9 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
+import structlog
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-
-import structlog
 
 logger = structlog.get_logger(__name__)
 
@@ -30,6 +29,7 @@ _CLICKHOUSE_URL = "clickhouse://default:clickhouse@clickhouse:8123/fraud"
 
 def _get_clickhouse_client():  # type: ignore[no-untyped-def]
     from clickhouse_driver import Client  # type: ignore[import-untyped]
+
     return Client.from_url(_CLICKHOUSE_URL)
 
 
@@ -65,7 +65,7 @@ def backfill_user_profiles(**context: object) -> int:
     """
 
     ch.execute("TRUNCATE TABLE IF EXISTS fraud.user_profiles")
-    rows = ch.execute(query)
+    ch.execute(query)
     row_count = ch.execute("SELECT count() FROM fraud.user_profiles")[0][0]
 
     structlog.get_logger(__name__).info("user_profiles_backfilled", rows=row_count)

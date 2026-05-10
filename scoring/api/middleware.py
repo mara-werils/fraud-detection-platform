@@ -24,9 +24,7 @@ REQUEST_LATENCY = Histogram(
 class RequestIDMiddleware(BaseHTTPMiddleware):
     """Middleware that injects an X-Request-ID header into every request/response."""
 
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         request_id = request.headers.get("X-Request-ID", str(uuid4()))
         request.state.request_id = request_id
 
@@ -38,9 +36,7 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
 class LatencyMiddleware(BaseHTTPMiddleware):
     """Middleware that tracks request latency via logs and Prometheus histogram."""
 
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         start = time.perf_counter()
         response = await call_next(request)
         elapsed = time.perf_counter() - start

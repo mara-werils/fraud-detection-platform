@@ -141,8 +141,8 @@ def save_visualisations(study: optuna.Study, output_dir: str | Path) -> None:
     try:
         from optuna.visualization import (
             plot_optimization_history,
-            plot_param_importances,
             plot_parallel_coordinate,
+            plot_param_importances,
             plot_slice,
         )
     except ImportError:

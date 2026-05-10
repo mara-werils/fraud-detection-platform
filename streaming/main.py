@@ -11,13 +11,13 @@ from typing import Any
 
 import structlog
 
+from feature_store.online_store import OnlineFeatureStore
 from shared.kafka_utils import (
     KafkaConsumerWrapper,
     KafkaProducerWrapper,
     setup_graceful_shutdown,
 )
 from shared.schemas import Transaction
-from feature_store.online_store import OnlineFeatureStore
 from streaming.config import StreamingConfig
 from streaming.enrichment import TransactionEnricher
 from streaming.windowed_aggregates import WindowedAggregator

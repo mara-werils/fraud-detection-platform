@@ -13,8 +13,8 @@ Usage::
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Sequence
 
 import numpy as np
 import pandas as pd
@@ -26,6 +26,7 @@ log = structlog.get_logger(__name__)
 # ---------------------------------------------------------------------------
 # Feature importance tracker
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class FeatureImportanceTracker:
@@ -55,6 +56,7 @@ def get_importance_tracker() -> FeatureImportanceTracker:
 # ---------------------------------------------------------------------------
 # Feature group helpers
 # ---------------------------------------------------------------------------
+
 
 def _transaction_features(df: pd.DataFrame) -> pd.DataFrame:
     """Transaction-level features: amount transforms, category/channel encoding."""
@@ -234,7 +236,9 @@ def _behavioral_features(df: pd.DataFrame) -> pd.DataFrame:
             .fillna(1)
             .astype(np.int32)
         )
-        df["f_session_txn_count"] = df_sorted["f_session_txn_count"].reindex(df.index).fillna(1).astype(np.int32)
+        df["f_session_txn_count"] = (
+            df_sorted["f_session_txn_count"].reindex(df.index).fillna(1).astype(np.int32)
+        )
         df.drop(columns=["_ts"], errors="ignore", inplace=True)
     elif "f_session_txn_count" not in df.columns:
         df["f_session_txn_count"] = 1
@@ -301,6 +305,7 @@ def get_feature_names() -> list[str]:
 # Public API
 # ---------------------------------------------------------------------------
 
+
 def engineer_features(
     df: pd.DataFrame,
     *,
@@ -320,7 +325,11 @@ def engineer_features(
     Returns:
         DataFrame with all engineered feature columns present.
     """
-    log.info("feature_engineering_start", rows=len(df), existing_features=len([c for c in df.columns if c.startswith("f_")]))
+    log.info(
+        "feature_engineering_start",
+        rows=len(df),
+        existing_features=len([c for c in df.columns if c.startswith("f_")]),
+    )
 
     df = _transaction_features(df)
     df = _velocity_features(df)
@@ -340,6 +349,8 @@ def engineer_features(
             df[fname] = 0.0
 
     all_feature_cols = [c for c in df.columns if c.startswith("f_")]
-    log.info("feature_engineering_done", total_features=len(all_feature_cols), requested=len(final_names))
+    log.info(
+        "feature_engineering_done", total_features=len(all_feature_cols), requested=len(final_names)
+    )
 
     return df

@@ -8,8 +8,6 @@ CLI::
 from __future__ import annotations
 
 import argparse
-import json
-import os
 import time
 from pathlib import Path
 from typing import Any
@@ -149,7 +147,9 @@ def train_final_model(
 
     val_preds = bst.predict(dval)
     val_pr_auc = average_precision_score(y_val, val_preds)
-    log.info("final_model_trained", val_pr_auc=round(val_pr_auc, 5), best_iteration=bst.best_iteration)
+    log.info(
+        "final_model_trained", val_pr_auc=round(val_pr_auc, 5), best_iteration=bst.best_iteration
+    )
 
     return bst
 
@@ -192,7 +192,7 @@ def run_training(
 
     # --- Load raw data and engineer features ---
     raw_df = pd.read_parquet(data_path)
-    df = engineer_features(raw_df, feature_names=ALL_FEATURE_NAMES)
+    engineer_features(raw_df, feature_names=ALL_FEATURE_NAMES)
 
     # --- Prepare splits ---
     split = prepare_data(
@@ -219,7 +219,7 @@ def run_training(
         n_folds=n_folds,
     )
     study.optimize(objective, n_trials=n_trials, show_progress_bar=True)
-    summary = log_study_summary(study)
+    log_study_summary(study)
 
     # Export best params
     params_path = Path(output_path).parent / "best_params.json"
@@ -277,11 +277,15 @@ def run_training(
             init_experiment("fraud-xgboost")
             with start_run(run_name="xgboost-optuna"):
                 log_params(study.best_params)
-                log_params({"n_trials": n_trials, "n_folds": n_folds, "scale_pos_weight": scale_pos_weight})
+                log_params(
+                    {"n_trials": n_trials, "n_folds": n_folds, "scale_pos_weight": scale_pos_weight}
+                )
                 log_metrics({"test_pr_auc": test_pr_auc, "val_pr_auc": study.best_value})
                 log_artifact(output_path)
                 log_artifact(str(params_path))
-                log_model(bst, "xgboost-model", model_type="xgboost", registered_name="fraud-xgboost")
+                log_model(
+                    bst, "xgboost-model", model_type="xgboost", registered_name="fraud-xgboost"
+                )
             log.info("mlflow_logged")
         except Exception:
             log.warning("mlflow_logging_failed", exc_info=True)

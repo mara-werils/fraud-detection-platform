@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import asyncio
-import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from uuid import UUID, uuid4
 
@@ -12,13 +10,13 @@ import fakeredis.aioredis
 import pytest
 import pytest_asyncio
 
+from feature_store.online_store import _TTL_SECONDS, OnlineFeatureStore
 from shared.schemas import FeatureVector, Transaction
-from feature_store.online_store import OnlineFeatureStore, _TTL_SECONDS
-
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_transaction(
     user_id: UUID | None = None,
@@ -39,13 +37,14 @@ def _make_transaction(
         device_id=device_id,
         latitude=latitude,
         longitude=longitude,
-        timestamp=ts or datetime.now(tz=timezone.utc),
+        timestamp=ts or datetime.now(tz=UTC),
     )
 
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest_asyncio.fixture
 async def store():
@@ -60,6 +59,7 @@ async def store():
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+
 
 class TestUpdateFeaturesCreatesCorrectKeys:
     """Verify that update_features populates the expected Redis key patterns."""
@@ -135,9 +135,9 @@ class TestVelocitySlidingWindows:
     @pytest.mark.asyncio
     async def test_multiple_txns_accumulate(self, store: OnlineFeatureStore) -> None:
         user_id = uuid4()
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
 
-        for i in range(5):
+        for _ in range(5):
             txn = _make_transaction(user_id=user_id, amount=Decimal("10.00"), ts=now)
             await store.update_features(txn)
 
@@ -150,7 +150,7 @@ class TestVelocitySlidingWindows:
     @pytest.mark.asyncio
     async def test_amount_sums_in_window(self, store: OnlineFeatureStore) -> None:
         user_id = uuid4()
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
 
         for amt in [Decimal("10.00"), Decimal("20.00"), Decimal("30.00")]:
             txn = _make_transaction(user_id=user_id, amount=amt, ts=now)
@@ -159,7 +159,9 @@ class TestVelocitySlidingWindows:
         probe = _make_transaction(user_id=user_id, amount=Decimal("0"), ts=now)
         features = await store.get_features(user_id, probe)
 
-        assert features.txn_amount_sum_1h == Decimal("60.00") or float(features.txn_amount_sum_1h) == pytest.approx(60.0, abs=0.01)
+        assert features.txn_amount_sum_1h == Decimal("60.00") or float(
+            features.txn_amount_sum_1h
+        ) == pytest.approx(60.0, abs=0.01)
 
 
 class TestGetFeaturesReturnsCompleteVector:
@@ -215,7 +217,7 @@ class TestGetFeaturesReturnsCompleteVector:
     @pytest.mark.asyncio
     async def test_amount_zscore_nonzero_after_multiple(self, store: OnlineFeatureStore) -> None:
         user_id = uuid4()
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
 
         for amt in [Decimal("10"), Decimal("10"), Decimal("10"), Decimal("10")]:
             txn = _make_transaction(user_id=user_id, amount=amt, ts=now)

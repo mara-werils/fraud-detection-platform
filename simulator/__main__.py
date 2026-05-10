@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import sys
 
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:

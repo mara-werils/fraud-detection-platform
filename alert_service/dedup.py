@@ -101,10 +101,7 @@ class AlertDeduplicator:
         """Remove expired entries from the dedup map."""
         now = time.monotonic()
         async with self._lock:
-            expired_keys = [
-                k for k, ts in self._seen.items()
-                if (now - ts) >= self._ttl_seconds
-            ]
+            expired_keys = [k for k, ts in self._seen.items() if (now - ts) >= self._ttl_seconds]
             for key in expired_keys:
                 del self._seen[key]
             if expired_keys:

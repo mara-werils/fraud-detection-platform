@@ -12,7 +12,6 @@ CLI::
 from __future__ import annotations
 
 import argparse
-import os
 import time
 from pathlib import Path
 from typing import Any
@@ -81,44 +80,64 @@ def build_transaction_graph(
     user_features_list: list[np.ndarray] = []
     for uid in user_ids:
         user_df = df[df["user_id"] == uid]
-        feats = np.array([
-            user_df["amount"].astype(float).mean(),
-            user_df["amount"].astype(float).std() if len(user_df) > 1 else 0.0,
-            float(len(user_df)),
-            user_df["is_fraud"].mean(),
-            user_df["f_txn_count_24h"].mean() if "f_txn_count_24h" in df.columns else 0.0,
-            user_df["f_distance_from_home_km"].mean() if "f_distance_from_home_km" in df.columns else 0.0,
-            user_df["f_is_new_device"].mean() if "f_is_new_device" in df.columns else 0.0,
-            user_df["f_amount_deviation"].mean() if "f_amount_deviation" in df.columns else 0.0,
-        ], dtype=np.float32)
+        feats = np.array(
+            [
+                user_df["amount"].astype(float).mean(),
+                user_df["amount"].astype(float).std() if len(user_df) > 1 else 0.0,
+                float(len(user_df)),
+                user_df["is_fraud"].mean(),
+                user_df["f_txn_count_24h"].mean() if "f_txn_count_24h" in df.columns else 0.0,
+                user_df["f_distance_from_home_km"].mean()
+                if "f_distance_from_home_km" in df.columns
+                else 0.0,
+                user_df["f_is_new_device"].mean() if "f_is_new_device" in df.columns else 0.0,
+                user_df["f_amount_deviation"].mean() if "f_amount_deviation" in df.columns else 0.0,
+            ],
+            dtype=np.float32,
+        )
         user_features_list.append(feats)
 
-    user_features = np.stack(user_features_list) if user_features_list else np.zeros((0, 8), dtype=np.float32)
+    user_features = (
+        np.stack(user_features_list) if user_features_list else np.zeros((0, 8), dtype=np.float32)
+    )
 
     # --- Merchant node features ---
     merchant_features_list: list[np.ndarray] = []
     for mid in merchant_ids:
         merch_df = df[df["merchant_id"] == mid]
-        feats = np.array([
-            merch_df["amount"].astype(float).mean(),
-            merch_df["amount"].astype(float).std() if len(merch_df) > 1 else 0.0,
-            float(len(merch_df)),
-            merch_df["is_fraud"].mean(),
-            merch_df["f_merchant_category_risk"].mean() if "f_merchant_category_risk" in df.columns else 0.01,
-            0.0, 0.0, 0.0,  # padding to match user feature dim
-        ], dtype=np.float32)
+        feats = np.array(
+            [
+                merch_df["amount"].astype(float).mean(),
+                merch_df["amount"].astype(float).std() if len(merch_df) > 1 else 0.0,
+                float(len(merch_df)),
+                merch_df["is_fraud"].mean(),
+                merch_df["f_merchant_category_risk"].mean()
+                if "f_merchant_category_risk" in df.columns
+                else 0.01,
+                0.0,
+                0.0,
+                0.0,  # padding to match user feature dim
+            ],
+            dtype=np.float32,
+        )
         merchant_features_list.append(feats)
 
-    merchant_features = np.stack(merchant_features_list) if merchant_features_list else np.zeros((0, 8), dtype=np.float32)
+    merchant_features = (
+        np.stack(merchant_features_list)
+        if merchant_features_list
+        else np.zeros((0, 8), dtype=np.float32)
+    )
 
     # --- Combine node features ---
     x = torch.tensor(np.vstack([user_features, merchant_features]), dtype=torch.float)
 
     # --- Node type indicator (0=user, 1=merchant) ---
-    node_type = torch.cat([
-        torch.zeros(n_users, dtype=torch.long),
-        torch.ones(n_merchants, dtype=torch.long),
-    ])
+    node_type = torch.cat(
+        [
+            torch.zeros(n_users, dtype=torch.long),
+            torch.ones(n_merchants, dtype=torch.long),
+        ]
+    )
 
     # --- Build edges (bidirectional) ---
     src_list: list[int] = []
@@ -155,7 +174,7 @@ def build_transaction_graph(
 
     # Node-level labels: a node is fraudulent if any of its edges are
     node_labels = torch.zeros(n_nodes, dtype=torch.long)
-    for i, row in df[df["is_fraud"] == 1].iterrows():
+    for _, row in df[df["is_fraud"] == 1].iterrows():
         u_idx = user_to_idx[row["user_id"]]
         m_idx = merchant_to_idx[row["merchant_id"]]
         node_labels[u_idx] = 1
@@ -194,7 +213,7 @@ def _build_model(
     """Build a 2-layer GraphSAGE model with MLP classification head."""
     import torch
     import torch.nn as nn
-    import torch.nn.functional as F
+    import torch.nn.functional as F  # noqa: N812
     from torch_geometric.nn import SAGEConv
 
     class GraphSAGEFraud(nn.Module):
@@ -277,7 +296,7 @@ def train_gnn(
         Tuple of (trained model, metrics dict).
     """
     import torch
-    import torch.nn.functional as F
+    import torch.nn.functional as F  # noqa: N812
     from sklearn.metrics import roc_auc_score
     from torch_geometric.loader import NeighborLoader
 
@@ -382,7 +401,12 @@ def train_gnn(
             no_improve += 1
 
         if no_improve >= patience:
-            log.info("early_stopping", epoch=epoch, best_epoch=best_epoch, best_val_auc=round(best_val_auc, 5))
+            log.info(
+                "early_stopping",
+                epoch=epoch,
+                best_epoch=best_epoch,
+                best_val_auc=round(best_val_auc, 5),
+            )
             break
 
     # --- Restore best model ---

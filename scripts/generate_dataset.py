@@ -38,14 +38,25 @@ except ImportError:
 # ---------------------------------------------------------------------------
 
 CATEGORIES = [
-    "groceries", "electronics", "restaurants", "gas",
-    "travel", "entertainment", "healthcare", "utilities",
+    "groceries",
+    "electronics",
+    "restaurants",
+    "gas",
+    "travel",
+    "entertainment",
+    "healthcare",
+    "utilities",
 ]
 
 CATEGORY_RISK = {
-    "groceries": 0.005, "electronics": 0.04, "restaurants": 0.008,
-    "gas": 0.01, "travel": 0.03, "entertainment": 0.015,
-    "healthcare": 0.005, "utilities": 0.003,
+    "groceries": 0.005,
+    "electronics": 0.04,
+    "restaurants": 0.008,
+    "gas": 0.01,
+    "travel": 0.03,
+    "entertainment": 0.015,
+    "healthcare": 0.005,
+    "utilities": 0.003,
 }
 
 CHANNELS = ["mobile_app", "web", "pos_terminal", "atm"]
@@ -60,11 +71,21 @@ FRAUD_PATTERNS = [
 ]
 
 CITIES = [
-    (40.7128, -74.0060), (34.0522, -118.2437), (51.5074, -0.1278),
-    (48.8566, 2.3522), (43.2220, 76.8512), (51.1694, 71.4491),
-    (35.6762, 139.6503), (55.7558, 37.6173), (25.2048, 55.2708),
-    (37.5665, 126.9780), (41.8781, -87.6298), (29.7604, -95.3698),
-    (-33.8688, 151.2093), (19.4326, -99.1332), (59.3293, 18.0686),
+    (40.7128, -74.0060),
+    (34.0522, -118.2437),
+    (51.5074, -0.1278),
+    (48.8566, 2.3522),
+    (43.2220, 76.8512),
+    (51.1694, 71.4491),
+    (35.6762, 139.6503),
+    (55.7558, 37.6173),
+    (25.2048, 55.2708),
+    (37.5665, 126.9780),
+    (41.8781, -87.6298),
+    (29.7604, -95.3698),
+    (-33.8688, 151.2093),
+    (19.4326, -99.1332),
+    (59.3293, 18.0686),
 ]
 
 
@@ -72,13 +93,23 @@ CITIES = [
 # User simulation context
 # ---------------------------------------------------------------------------
 
+
 class UserContext:
     """Maintains running statistics for a simulated user."""
 
     __slots__ = (
-        "user_id", "home_lat", "home_lon", "avg_amount", "device_id",
-        "merchant_ids", "txn_history", "last_lat", "last_lon",
-        "last_txn_time", "total_amount", "txn_count",
+        "user_id",
+        "home_lat",
+        "home_lon",
+        "avg_amount",
+        "device_id",
+        "merchant_ids",
+        "txn_history",
+        "last_lat",
+        "last_lon",
+        "last_txn_time",
+        "total_amount",
+        "txn_count",
     )
 
     def __init__(self) -> None:
@@ -104,9 +135,7 @@ def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     dlon = math.radians(lon2 - lon1)
     a = (
         math.sin(dlat / 2) ** 2
-        + math.cos(math.radians(lat1))
-        * math.cos(math.radians(lat2))
-        * math.sin(dlon / 2) ** 2
+        + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2) ** 2
     )
     return r * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
@@ -114,6 +143,7 @@ def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
 # ---------------------------------------------------------------------------
 # Legitimate transaction generator
 # ---------------------------------------------------------------------------
+
 
 def _generate_legit_txn(user: UserContext, ts: datetime) -> dict:
     """Generate a single legitimate transaction with features."""
@@ -148,24 +178,30 @@ def _generate_legit_txn(user: UserContext, ts: datetime) -> dict:
 # Fraud transaction generators (5 patterns)
 # ---------------------------------------------------------------------------
 
+
 def _generate_card_testing(user: UserContext, ts: datetime) -> list[dict]:
     """Rapid micro-transactions: 10-15 txns, $1-$5 each, < 2 minutes."""
     rows = []
     count = random.randint(10, 15)
-    for i in range(count):
+    for _ in range(count):
         t = ts + timedelta(seconds=random.uniform(0, 120))
         amt = round(random.uniform(1.0, 5.0), 2)
-        rows.append(_build_row(
-            user=user, ts=t, amount=amt,
-            category=random.choice(CATEGORIES),
-            channel="web",
-            lat=user.home_lat + random.uniform(-0.5, 0.5),
-            lon=user.home_lon + random.uniform(-0.5, 0.5),
-            device=uuid4().hex[:12],
-            merchant=str(uuid4())[:8],
-            is_international=False,
-            is_fraud=1, fraud_pattern="card_testing",
-        ))
+        rows.append(
+            _build_row(
+                user=user,
+                ts=t,
+                amount=amt,
+                category=random.choice(CATEGORIES),
+                channel="web",
+                lat=user.home_lat + random.uniform(-0.5, 0.5),
+                lon=user.home_lon + random.uniform(-0.5, 0.5),
+                device=uuid4().hex[:12],
+                merchant=str(uuid4())[:8],
+                is_international=False,
+                is_fraud=1,
+                fraud_pattern="card_testing",
+            )
+        )
     return rows
 
 
@@ -173,17 +209,22 @@ def _generate_account_takeover(user: UserContext, ts: datetime) -> list[dict]:
     """Single high-value txn from a new device at an unusual hour."""
     t = ts.replace(hour=random.randint(2, 5))
     amt = round(user.avg_amount * random.uniform(10, 50), 2)
-    return [_build_row(
-        user=user, ts=t, amount=min(amt, 50000.0),
-        category=random.choice(["electronics", "travel"]),
-        channel=random.choice(["web", "mobile_app"]),
-        lat=user.home_lat + random.uniform(-0.5, 0.5),
-        lon=user.home_lon + random.uniform(-0.5, 0.5),
-        device=uuid4().hex[:12],
-        merchant=str(uuid4())[:8],
-        is_international=random.random() < 0.5,
-        is_fraud=1, fraud_pattern="account_takeover",
-    )]
+    return [
+        _build_row(
+            user=user,
+            ts=t,
+            amount=min(amt, 50000.0),
+            category=random.choice(["electronics", "travel"]),
+            channel=random.choice(["web", "mobile_app"]),
+            lat=user.home_lat + random.uniform(-0.5, 0.5),
+            lon=user.home_lon + random.uniform(-0.5, 0.5),
+            device=uuid4().hex[:12],
+            merchant=str(uuid4())[:8],
+            is_international=random.random() < 0.5,
+            is_fraud=1,
+            fraud_pattern="account_takeover",
+        )
+    ]
 
 
 def _generate_geo_anomaly(user: UserContext, ts: datetime) -> list[dict]:
@@ -191,20 +232,32 @@ def _generate_geo_anomaly(user: UserContext, ts: datetime) -> list[dict]:
     distant = random.choice(CITIES)
     return [
         _build_row(
-            user=user, ts=ts, amount=round(random.uniform(10, 200), 2),
-            category=random.choice(CATEGORIES), channel="pos_terminal",
-            lat=user.home_lat, lon=user.home_lon,
-            device=user.device_id, merchant=random.choice(user.merchant_ids),
-            is_international=False, is_fraud=1, fraud_pattern="geo_anomaly",
+            user=user,
+            ts=ts,
+            amount=round(random.uniform(10, 200), 2),
+            category=random.choice(CATEGORIES),
+            channel="pos_terminal",
+            lat=user.home_lat,
+            lon=user.home_lon,
+            device=user.device_id,
+            merchant=random.choice(user.merchant_ids),
+            is_international=False,
+            is_fraud=1,
+            fraud_pattern="geo_anomaly",
         ),
         _build_row(
-            user=user, ts=ts + timedelta(minutes=random.randint(15, 30)),
+            user=user,
+            ts=ts + timedelta(minutes=random.randint(15, 30)),
             amount=round(random.uniform(100, 3000), 2),
-            category=random.choice(["electronics", "travel"]), channel="pos_terminal",
+            category=random.choice(["electronics", "travel"]),
+            channel="pos_terminal",
             lat=distant[0] + random.uniform(-0.2, 0.2),
             lon=distant[1] + random.uniform(-0.2, 0.2),
-            device=uuid4().hex[:12], merchant=str(uuid4())[:8],
-            is_international=True, is_fraud=1, fraud_pattern="geo_anomaly",
+            device=uuid4().hex[:12],
+            merchant=str(uuid4())[:8],
+            is_international=True,
+            is_fraud=1,
+            fraud_pattern="geo_anomaly",
         ),
     ]
 
@@ -217,14 +270,22 @@ def _generate_velocity_abuse(user: UserContext, ts: datetime) -> list[dict]:
     for i in range(count):
         t = ts + timedelta(seconds=random.uniform(0, 300))
         amt = round(base_amt + i * random.uniform(5, 30), 2)
-        rows.append(_build_row(
-            user=user, ts=t, amount=min(amt, 20000.0),
-            category=random.choice(CATEGORIES), channel="mobile_app",
-            lat=user.home_lat + random.uniform(-0.05, 0.05),
-            lon=user.home_lon + random.uniform(-0.05, 0.05),
-            device=user.device_id, merchant=random.choice(user.merchant_ids),
-            is_international=False, is_fraud=1, fraud_pattern="velocity_abuse",
-        ))
+        rows.append(
+            _build_row(
+                user=user,
+                ts=t,
+                amount=min(amt, 20000.0),
+                category=random.choice(CATEGORIES),
+                channel="mobile_app",
+                lat=user.home_lat + random.uniform(-0.05, 0.05),
+                lon=user.home_lon + random.uniform(-0.05, 0.05),
+                device=user.device_id,
+                merchant=random.choice(user.merchant_ids),
+                is_international=False,
+                is_fraud=1,
+                fraud_pattern="velocity_abuse",
+            )
+        )
     return rows
 
 
@@ -237,15 +298,22 @@ def _generate_merchant_collusion(user: UserContext, ts: datetime) -> list[dict]:
     for i in range(ring_size):
         t = ts + timedelta(minutes=random.randint(2, 15) * (i + 1))
         amt = round(base_amt + random.uniform(-20, 20), 2)
-        rows.append(_build_row(
-            user=user, ts=t, amount=amt,
-            category=random.choice(["electronics", "entertainment", "travel"]),
-            channel="web",
-            lat=user.home_lat + random.uniform(-0.05, 0.05),
-            lon=user.home_lon + random.uniform(-0.05, 0.05),
-            device=uuid4().hex[:12], merchant=colluding_merchant,
-            is_international=False, is_fraud=1, fraud_pattern="merchant_collusion",
-        ))
+        rows.append(
+            _build_row(
+                user=user,
+                ts=t,
+                amount=amt,
+                category=random.choice(["electronics", "entertainment", "travel"]),
+                channel="web",
+                lat=user.home_lat + random.uniform(-0.05, 0.05),
+                lon=user.home_lon + random.uniform(-0.05, 0.05),
+                device=uuid4().hex[:12],
+                merchant=colluding_merchant,
+                is_international=False,
+                is_fraud=1,
+                fraud_pattern="merchant_collusion",
+            )
+        )
     return rows
 
 
@@ -261,6 +329,7 @@ FRAUD_GENERATORS = [
 # ---------------------------------------------------------------------------
 # Feature engineering
 # ---------------------------------------------------------------------------
+
 
 def _build_row(
     *,
@@ -345,8 +414,10 @@ def _build_row(
     # Average time between transactions
     if len(recent_24h) >= 2:
         times_sorted = sorted(t["ts"] for t in recent_24h)
-        diffs = [(times_sorted[i + 1] - times_sorted[i]).total_seconds()
-                 for i in range(len(times_sorted) - 1)]
+        diffs = [
+            (times_sorted[i + 1] - times_sorted[i]).total_seconds()
+            for i in range(len(times_sorted) - 1)
+        ]
         avg_time_between_txn = np.mean(diffs)
     else:
         avg_time_between_txn = 3600.0
@@ -357,10 +428,16 @@ def _build_row(
     user.last_txn_time = ts
     user.total_amount += amount
     user.txn_count += 1
-    user.txn_history.append({
-        "ts": ts, "amount": amount, "merchant": merchant,
-        "device": device, "lat": lat, "lon": lon,
-    })
+    user.txn_history.append(
+        {
+            "ts": ts,
+            "amount": amount,
+            "merchant": merchant,
+            "device": device,
+            "lat": lat,
+            "lon": lon,
+        }
+    )
 
     # Keep history bounded (last 200 txns)
     if len(user.txn_history) > 200:
@@ -375,7 +452,7 @@ def _build_row(
         "currency": random.choice(CURRENCIES),
         "category": category,
         "channel": channel,
-        "ip_address": f"{random.randint(1,223)}.{random.randint(0,255)}.{random.randint(0,255)}.{random.randint(1,254)}",
+        "ip_address": f"{random.randint(1, 223)}.{random.randint(0, 255)}.{random.randint(0, 255)}.{random.randint(1, 254)}",
         "device_fingerprint": device,
         "geo_lat": round(lat, 6),
         "geo_lon": round(lon, 6),
@@ -383,14 +460,11 @@ def _build_row(
         "timestamp": ts,
         "is_fraud": is_fraud,
         "fraud_pattern": fraud_pattern,
-
         # === Engineered features (30+) ===
-
         # Transaction features
         "f_amount": amount,
         "f_amount_log": round(math.log1p(amount), 6),
         "f_currency_usd": int(random.choice(CURRENCIES) == "USD"),
-
         # Velocity features
         "f_txn_count_1m": txn_count_1m,
         "f_txn_count_5m": txn_count_5m,
@@ -398,40 +472,33 @@ def _build_row(
         "f_txn_count_24h": txn_count_24h,
         "f_txn_sum_1h": round(txn_sum_1h, 2),
         "f_txn_sum_24h": round(txn_sum_24h, 2),
-
         # Amount features
         "f_amount_deviation": round(float(amount_deviation), 4),
         "f_amount_to_avg_ratio": round(float(amount_to_avg_ratio), 4),
         "f_avg_amount_30d": round(float(avg_amount_30d), 2),
         "f_max_amount_7d": round(float(max_amount_7d), 2),
-
         # Geo features
         "f_distance_from_last_km": round(dist_from_last, 2),
         "f_distance_from_home_km": round(dist_from_home, 2),
         "f_is_new_city": int(is_new_city),
-
         # Device features
         "f_is_new_device": int(is_new_device),
         "f_device_age_days": device_age_days,
         "f_device_txn_count": device_txn_count,
-
         # Merchant features
         "f_is_new_merchant": int(is_new_merchant),
         "f_merchant_category_risk": merchant_risk,
         "f_unique_merchants_24h": unique_merchants_24h,
         "f_unique_merchants_7d": unique_merchants_7d,
-
         # Time features
         "f_hour_of_day": hour,
         "f_day_of_week": dow,
         "f_is_weekend": int(is_weekend),
         "f_is_night": int(is_night),
-
         # Behavioral features
         "f_time_since_last_txn_s": round(time_since_last, 2),
         "f_avg_time_between_txn_s": round(float(avg_time_between_txn), 2),
         "f_unique_devices_24h": unique_devices_24h,
-
         # Interaction features
         "f_amount_x_velocity": round(amount * txn_count_1h, 2),
         "f_distance_x_time": round(dist_from_last / max(time_since_last, 1.0), 6),
@@ -441,6 +508,7 @@ def _build_row(
 # ---------------------------------------------------------------------------
 # Main generation logic
 # ---------------------------------------------------------------------------
+
 
 def generate_dataset(size: int, fraud_rate: float = 0.02, seed: int = 42) -> pd.DataFrame:
     """Generate a full labeled dataset with engineered features.
@@ -472,10 +540,9 @@ def generate_dataset(size: int, fraud_rate: float = 0.02, seed: int = 42) -> pd.
     span_seconds = int((end_time - base_time).total_seconds())
 
     # Generate legitimate transactions (sorted by time for realistic features)
-    legit_times = sorted([
-        base_time + timedelta(seconds=random.randint(0, span_seconds))
-        for _ in range(n_legit)
-    ])
+    legit_times = sorted(
+        [base_time + timedelta(seconds=random.randint(0, span_seconds)) for _ in range(n_legit)]
+    )
 
     for ts in legit_times:
         user = random.choice(users)
@@ -558,8 +625,9 @@ def main() -> None:
     feature_cols = [c for c in df.columns if c.startswith("f_")]
     print(f"\n--- Feature Summary ({len(feature_cols)} features) ---")
     for col in feature_cols:
-        print(f"  {col}: min={df[col].min():.4f}, max={df[col].max():.4f}, "
-              f"mean={df[col].mean():.4f}")
+        print(
+            f"  {col}: min={df[col].min():.4f}, max={df[col].max():.4f}, mean={df[col].mean():.4f}"
+        )
 
 
 if __name__ == "__main__":

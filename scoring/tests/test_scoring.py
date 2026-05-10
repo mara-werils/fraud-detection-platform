@@ -6,13 +6,11 @@ from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
-import pytest
 from fastapi.testclient import TestClient
-
-from shared.schemas import FeatureVector, Transaction, TransactionType
 
 from scoring.models.ensemble import Decision, EnsembleScorer
 from scoring.models.rule_engine import RuleEngine
+from shared.schemas import FeatureVector, Transaction, TransactionType
 
 
 class TestRuleEngine:
@@ -25,9 +23,7 @@ class TestRuleEngine:
         suspicious_features: FeatureVector,
     ) -> None:
         """High amount rule should trigger when amount far exceeds user average."""
-        result = rule_engine.rule_high_amount(
-            suspicious_transaction, suspicious_features
-        )
+        result = rule_engine.rule_high_amount(suspicious_transaction, suspicious_features)
         assert result.triggered is True
         assert result.score == 0.3
         assert result.rule_name == "high_amount"
@@ -50,9 +46,7 @@ class TestRuleEngine:
         suspicious_features: FeatureVector,
     ) -> None:
         """Velocity rule should trigger when txn count exceeds threshold."""
-        result = rule_engine.rule_velocity(
-            suspicious_transaction, suspicious_features
-        )
+        result = rule_engine.rule_velocity(suspicious_transaction, suspicious_features)
         assert result.triggered is True
         assert result.score == 0.15
 
@@ -74,9 +68,7 @@ class TestRuleEngine:
         suspicious_features: FeatureVector,
     ) -> None:
         """Geo anomaly rule should trigger when distance exceeds threshold."""
-        result = rule_engine.rule_geo_anomaly(
-            suspicious_transaction, suspicious_features
-        )
+        result = rule_engine.rule_geo_anomaly(suspicious_transaction, suspicious_features)
         assert result.triggered is True
         assert result.score == 0.25
 
@@ -98,9 +90,7 @@ class TestRuleEngine:
         suspicious_features: FeatureVector,
     ) -> None:
         """New device rule should trigger when device is new."""
-        result = rule_engine.rule_new_device(
-            suspicious_transaction, suspicious_features
-        )
+        result = rule_engine.rule_new_device(suspicious_transaction, suspicious_features)
         assert result.triggered is True
         assert result.score == 0.2
 
@@ -111,9 +101,7 @@ class TestRuleEngine:
         suspicious_features: FeatureVector,
     ) -> None:
         """Night rule should trigger for transactions between 1-5 AM."""
-        result = rule_engine.rule_night_transaction(
-            suspicious_transaction, suspicious_features
-        )
+        result = rule_engine.rule_night_transaction(suspicious_transaction, suspicious_features)
         assert result.triggered is True
         assert result.score == 0.1
 
@@ -124,9 +112,7 @@ class TestRuleEngine:
         normal_features: FeatureVector,
     ) -> None:
         """Night rule should not trigger for daytime transactions."""
-        result = rule_engine.rule_night_transaction(
-            normal_transaction, normal_features
-        )
+        result = rule_engine.rule_night_transaction(normal_transaction, normal_features)
         assert result.triggered is False
         assert result.score == 0.0
 
@@ -137,9 +123,7 @@ class TestRuleEngine:
         suspicious_features: FeatureVector,
     ) -> None:
         """International rule should trigger when multiple countries detected."""
-        result = rule_engine.rule_international(
-            suspicious_transaction, suspicious_features
-        )
+        result = rule_engine.rule_international(suspicious_transaction, suspicious_features)
         assert result.triggered is True
         assert result.score == 0.15
 
@@ -263,9 +247,7 @@ class TestEnsembleScorer:
 class TestAPI:
     """Tests for the scoring API endpoints."""
 
-    def test_score_endpoint(
-        self, test_client: TestClient, normal_transaction: Transaction
-    ) -> None:
+    def test_score_endpoint(self, test_client: TestClient, normal_transaction: Transaction) -> None:
         """POST /score should return a scored transaction."""
         payload = normal_transaction.model_dump(mode="json")
         response = test_client.post("/score", json=payload)

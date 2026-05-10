@@ -2,20 +2,17 @@
 
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, AsyncIterator
-from unittest.mock import AsyncMock, MagicMock, patch
-from uuid import UUID, uuid4
+from unittest.mock import AsyncMock, MagicMock
+from uuid import UUID
 
 import pytest
 from fastapi.testclient import TestClient
 
-from shared.schemas import FeatureVector, Transaction, TransactionType
-
 from scoring.models.ensemble import EnsembleScorer
 from scoring.models.rule_engine import RuleEngine
+from shared.schemas import FeatureVector, Transaction, TransactionType
 
 
 @pytest.fixture

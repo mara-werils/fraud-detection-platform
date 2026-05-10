@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-import time
 from datetime import datetime
-from decimal import Decimal
-from typing import Any, Sequence
+from typing import Any
 from uuid import UUID
 
 import clickhouse_connect
@@ -189,7 +187,7 @@ class OfflineFeatureStore:
         if self._client is None:
             raise RuntimeError("OfflineFeatureStore is not connected")
 
-        query = """
+        query = f"""
         SELECT
             count() AS total_txns,
             sum(amount) AS total_amount,
@@ -200,9 +198,9 @@ class OfflineFeatureStore:
             uniqExact(merchant_id) AS unique_merchants,
             avg(fraud_score) AS avg_fraud_score,
             countIf(is_fraud = 1) AS fraud_count
-        FROM {db}.transactions
+        FROM {self._database}.transactions
         WHERE user_id = %(user_id)s
-        """.format(db=self._database)
+        """
 
         result = await asyncio.to_thread(
             self._client.query,
@@ -229,7 +227,7 @@ class OfflineFeatureStore:
         if self._client is None:
             raise RuntimeError("OfflineFeatureStore is not connected")
 
-        query = """
+        query = f"""
         SELECT
             transaction_id,
             user_id,
@@ -251,10 +249,10 @@ class OfflineFeatureStore:
             fraud_score,
             is_fraud,
             timestamp
-        FROM {db}.transactions
+        FROM {self._database}.transactions
         WHERE timestamp >= %(start)s AND timestamp < %(end)s
         ORDER BY timestamp
-        """.format(db=self._database)
+        """
 
         result = await asyncio.to_thread(
             self._client.query,
@@ -273,13 +271,13 @@ class OfflineFeatureStore:
         if self._client is None:
             raise RuntimeError("OfflineFeatureStore is not connected")
 
-        query = """
+        query = f"""
         SELECT
             countIf(is_fraud = 1) AS fraud_count,
             count() AS total_count
-        FROM {db}.transactions
+        FROM {self._database}.transactions
         WHERE merchant_id = %(merchant_id)s
-        """.format(db=self._database)
+        """
 
         result = await asyncio.to_thread(
             self._client.query,
@@ -307,16 +305,33 @@ class OfflineFeatureStore:
             self._buffer.clear()
 
         column_names = [
-            "transaction_id", "user_id", "amount", "currency", "transaction_type",
-            "merchant_id", "merchant_category", "ip_address", "device_id",
-            "latitude", "longitude", "timestamp",
-            "txn_count_1h", "txn_count_24h",
-            "txn_amount_sum_1h", "txn_amount_sum_24h", "txn_amount_avg_24h",
-            "unique_merchants_24h", "max_amount_24h",
-            "time_since_last_txn_seconds", "distance_from_last_txn_km",
-            "is_new_device", "is_new_merchant",
-            "amount_zscore", "amount_to_avg_ratio",
-            "fraud_score", "is_fraud",
+            "transaction_id",
+            "user_id",
+            "amount",
+            "currency",
+            "transaction_type",
+            "merchant_id",
+            "merchant_category",
+            "ip_address",
+            "device_id",
+            "latitude",
+            "longitude",
+            "timestamp",
+            "txn_count_1h",
+            "txn_count_24h",
+            "txn_amount_sum_1h",
+            "txn_amount_sum_24h",
+            "txn_amount_avg_24h",
+            "unique_merchants_24h",
+            "max_amount_24h",
+            "time_since_last_txn_seconds",
+            "distance_from_last_txn_km",
+            "is_new_device",
+            "is_new_merchant",
+            "amount_zscore",
+            "amount_to_avg_ratio",
+            "fraud_score",
+            "is_fraud",
         ]
 
         try:

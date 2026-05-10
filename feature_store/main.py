@@ -12,13 +12,12 @@ from typing import Any
 
 import structlog
 
-from shared.kafka_utils import KafkaConsumerWrapper, setup_graceful_shutdown
-from shared.logging import setup_logging
-from shared.schemas import Transaction
-
 from feature_store.config import FeatureStoreConfig
 from feature_store.offline_store import OfflineFeatureStore
 from feature_store.online_store import OnlineFeatureStore
+from shared.kafka_utils import KafkaConsumerWrapper
+from shared.logging import setup_logging
+from shared.schemas import Transaction
 
 logger = structlog.get_logger(__name__)
 

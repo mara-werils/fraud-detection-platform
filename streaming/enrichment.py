@@ -133,7 +133,9 @@ class GeoIPResolver:
                 resp = self._reader.city(ip_address)
                 return GeoInfo(
                     country=resp.country.iso_code or "unknown",
-                    region=resp.subdivisions.most_specific.name or "unknown" if resp.subdivisions else "unknown",
+                    region=resp.subdivisions.most_specific.name or "unknown"
+                    if resp.subdivisions
+                    else "unknown",
                     city=resp.city.name or "unknown" if resp.city else "unknown",
                     latitude=resp.location.latitude or 0.0 if resp.location else 0.0,
                     longitude=resp.location.longitude or 0.0 if resp.location else 0.0,
