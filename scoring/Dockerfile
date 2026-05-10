@@ -1,16 +1,12 @@
 FROM python:3.12-slim AS builder
 
-WORKDIR /build
+WORKDIR /app
 
 COPY pyproject.toml ./
 COPY shared/ ./shared/
-COPY scoring/ ./scoring/
 
-RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir --prefix=/install \
-    fastapi uvicorn[standard] pydantic pydantic-settings \
-    aiokafka orjson structlog redis[hiredis] \
-    prometheus-client python-snappy
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir .
 
 FROM python:3.12-slim
 
@@ -18,7 +14,8 @@ RUN addgroup --system app && adduser --system --ingroup app app
 
 WORKDIR /app
 
-COPY --from=builder /install /usr/local
+COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
 COPY shared/ ./shared/
 COPY scoring/ ./scoring/
 

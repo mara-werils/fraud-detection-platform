@@ -6,9 +6,11 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends gcc libffi-dev && \
     rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt ./
-RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+COPY pyproject.toml ./
+COPY shared/ ./shared/
 
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir .
 
 FROM python:3.12-slim
 
@@ -17,7 +19,8 @@ WORKDIR /app
 RUN groupadd --gid 1000 appuser && \
     useradd --uid 1000 --gid 1000 --no-create-home appuser
 
-COPY --from=builder /install /usr/local
+COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
 
 COPY shared/ ./shared/
 COPY alert_service/ ./alert_service/
