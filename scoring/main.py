@@ -12,10 +12,27 @@ from redis.asyncio import Redis
 
 from scoring.api.middleware import setup_middleware
 from scoring.api.routes import router
+from scoring.api.batch import router as batch_router
+from scoring.api.transactions import router as transactions_router
+from scoring.api.cases import router as cases_router
+from scoring.api.feedback import router as feedback_router
+from scoring.api.drift import router as drift_router
+from scoring.api.ab_testing import router as ab_router
+from scoring.api.explainability import router as explainability_router
+from scoring.api.sanctions import router as sanctions_router
+from scoring.api.webhooks import router as webhooks_router
+from scoring.api.export import router as export_router
+from scoring.api.auth import register_api_key
 from scoring.config import ScoringConfig
 from scoring.consumer import create_consumer_handler
 from scoring.models.ensemble import EnsembleScorer
 from scoring.models.rule_engine import RuleEngine
+from scoring.services.case_manager import CaseManager
+from scoring.services.drift_detector import DriftDetector
+from scoring.services.feedback_store import FeedbackStore
+from scoring.services.sanctions_screener import SanctionsScreener
+from scoring.services.transaction_store import TransactionStore
+from scoring.services.webhook_manager import WebhookManager
 from shared.kafka_utils import KafkaConsumerWrapper, KafkaProducerWrapper
 from shared.logging import setup_logging
 from shared.metrics import create_metrics
@@ -27,8 +44,9 @@ logger = structlog.get_logger(__name__)
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Application lifespan handler.
 
-    Initialises Kafka consumer/producer, Redis connection, and the scoring
-    model on startup. Tears everything down gracefully on shutdown.
+    Initialises Kafka consumer/producer, Redis connection, the scoring
+    model, and all platform services on startup. Tears everything down
+    gracefully on shutdown.
     """
     config = ScoringConfig()
 
@@ -53,6 +71,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         rule_engine=rule_engine,
     )
     app.state.scorer = scorer
+
+    # Authentication
+    app.state.auth_enabled = config.api_auth_enabled
+    if config.api_key:
+        register_api_key(config.api_key, name="default", rate_limit=10000)
 
     # Redis
     redis: Redis | None = None
@@ -111,11 +134,23 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         consumer = None
     app.state.consumer = consumer
 
+    # Platform services
+    app.state.transaction_store = TransactionStore()
+    app.state.case_manager = CaseManager()
+    app.state.feedback_store = FeedbackStore()
+    app.state.drift_detector = DriftDetector()
+    app.state.sanctions_screener = SanctionsScreener()
+    app.state.webhook_manager = WebhookManager()
+
     await logger.ainfo(
         "scoring_service_started",
         model_version=config.model_version,
         kafka="connected" if producer and consumer else "degraded",
         redis="connected" if redis else "degraded",
+        services=[
+            "transaction_store", "case_manager", "feedback_store",
+            "drift_detector", "sanctions_screener", "webhook_manager",
+        ],
     )
 
     yield
@@ -144,17 +179,34 @@ def create_app() -> FastAPI:
     """Create and configure the FastAPI application.
 
     Returns:
-        Fully configured FastAPI instance.
+        Fully configured FastAPI instance with all routers and middleware.
     """
     app = FastAPI(
-        title="Fraud Detection Scoring Service",
-        description="Real-time transaction fraud scoring API",
-        version="0.1.0",
+        title="Fraud Detection Platform",
+        description=(
+            "Real-time ML-powered fraud detection platform with ensemble scoring, "
+            "case management, drift detection, and analyst workflows."
+        ),
+        version="0.2.0",
         lifespan=lifespan,
     )
 
     setup_middleware(app)
+
+    # Core routes
     app.include_router(router)
+
+    # API v1 routes
+    app.include_router(batch_router)
+    app.include_router(transactions_router)
+    app.include_router(cases_router)
+    app.include_router(feedback_router)
+    app.include_router(drift_router)
+    app.include_router(ab_router)
+    app.include_router(explainability_router)
+    app.include_router(sanctions_router)
+    app.include_router(webhooks_router)
+    app.include_router(export_router)
 
     return app
 
