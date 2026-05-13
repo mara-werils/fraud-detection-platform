@@ -23,6 +23,7 @@ dependencies = [
     "orjson>=3.9.0",
     "httpx>=0.27.0",
     "prometheus-client>=0.20.0",
+    "pyyaml>=6.0",
     "python-snappy>=0.7.0",
     "aiosmtplib>=3.0.0",
     "opentelemetry-api>=1.23.0",
@@ -46,8 +47,11 @@ dev = [
     "fakeredis[lua]>=2.21.0",
 ]
 
+[project.scripts]
+fraud-cli = "cli.__main__:main"
+
 [tool.hatch.build.targets.wheel]
-packages = ["shared"]
+packages = ["shared", "sdk", "cli"]
 
 [tool.ruff]
 target-version = "py311"
