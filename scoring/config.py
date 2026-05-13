@@ -43,6 +43,10 @@ class ScoringConfig(BaseSettings):
     log_level: str = "INFO"
     log_format: str = "json"
 
+    # Authentication
+    api_auth_enabled: bool = False
+    api_key: str = "fdp_dev_key_change_me_in_production"
+
     # Service
     service_name: str = "scoring-service"
     service_version: str = "0.1.0"
