@@ -1,0 +1,108 @@
+# Fraud Detection Rules Configuration
+# These rules are evaluated alongside ML models in the ensemble scorer.
+# Rules can be hot-reloaded without restarting the service.
+
+rules:
+  - name: high_amount_anomaly
+    description: "Transaction amount significantly exceeds user's historical average"
+    score: 0.3
+    enabled: true
+    match_mode: all
+    conditions:
+      - field: amount_to_avg_ratio
+        source: features
+        operator: gt
+        value: 5.0
+
+  - name: rapid_fire_transactions
+    description: "Unusually high transaction velocity in the last hour"
+    score: 0.2
+    enabled: true
+    match_mode: all
+    conditions:
+      - field: txn_count_1h
+        source: features
+        operator: gt
+        value: 10
+
+  - name: new_device_high_amount
+    description: "High-value transaction from a previously unseen device"
+    score: 0.4
+    enabled: true
+    match_mode: all
+    conditions:
+      - field: is_new_device
+        source: features
+        operator: eq
+        value: true
+      - field: amount_to_avg_ratio
+        source: features
+        operator: gt
+        value: 3.0
+
+  - name: geo_impossible_travel
+    description: "Transaction from a location impossibly far from the last known location"
+    score: 0.35
+    enabled: true
+    match_mode: all
+    conditions:
+      - field: distance_from_last_txn_km
+        source: features
+        operator: gt
+        value: 1000
+
+  - name: night_high_value
+    description: "High-value transaction during unusual hours (midnight to 5 AM)"
+    score: 0.2
+    enabled: true
+    match_mode: all
+    conditions:
+      - field: amount_to_avg_ratio
+        source: features
+        operator: gt
+        value: 2.0
+      - field: amount_zscore
+        source: features
+        operator: gt
+        value: 2.0
+
+  - name: multi_country_activity
+    description: "Transactions from multiple countries within 24 hours"
+    score: 0.25
+    enabled: true
+    match_mode: all
+    conditions:
+      - field: unique_countries_24h
+        source: features
+        operator: gt
+        value: 3
+
+  - name: new_merchant_high_amount
+    description: "Large transaction at a merchant the user has never visited"
+    score: 0.15
+    enabled: true
+    match_mode: all
+    conditions:
+      - field: is_new_merchant
+        source: features
+        operator: eq
+        value: true
+      - field: amount_zscore
+        source: features
+        operator: gt
+        value: 1.5
+
+  - name: burst_spending
+    description: "Total spending in the last hour exceeds daily average significantly"
+    score: 0.2
+    enabled: true
+    match_mode: all
+    conditions:
+      - field: txn_count_1h
+        source: features
+        operator: gt
+        value: 5
+      - field: amount_to_avg_ratio
+        source: features
+        operator: gt
+        value: 2.0
