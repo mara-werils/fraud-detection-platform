@@ -47,8 +47,11 @@ dev = [
     "fakeredis[lua]>=2.21.0",
 ]
 
+[project.scripts]
+fraud-cli = "cli.__main__:main"
+
 [tool.hatch.build.targets.wheel]
-packages = ["shared"]
+packages = ["shared", "sdk", "cli"]
 
 [tool.ruff]
 target-version = "py311"
