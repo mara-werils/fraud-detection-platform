@@ -46,7 +46,28 @@ class ScoringConfig(BaseSettings):
     # Authentication
     api_auth_enabled: bool = False
     api_key: str = "fdp_dev_key_change_me_in_production"
+    jwt_secret_key: str = "change-me-in-production-use-strong-secret"
+    jwt_algorithm: str = "HS256"
+    jwt_access_token_expire_minutes: int = 60
+    jwt_refresh_token_expire_days: int = 30
+
+    # PostgreSQL
+    database_url: str = "postgresql+asyncpg://fraud:fraud@localhost:5432/fraud"
+    db_pool_size: int = 20
+    db_max_overflow: int = 40
+
+    # Feature cache
+    feature_cache_ttl_seconds: int = 300
+    feature_cache_l1_max_size: int = 10_000
+
+    # Batch inference
+    batch_inference_max_size: int = 64
+    batch_inference_max_wait_ms: int = 10
+
+    # SLO
+    slo_p99_latency_ms: float = 200.0
+    slo_error_rate_threshold: float = 0.001
 
     # Service
     service_name: str = "scoring-service"
-    service_version: str = "0.1.0"
+    service_version: str = "0.2.0"
