@@ -17,9 +17,18 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT"
       KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-      KAFKA_NUM_PARTITIONS: "3"
+      KAFKA_NUM_PARTITIONS: "12"
       KAFKA_DEFAULT_REPLICATION_FACTOR: "1"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      KAFKA_LOG_RETENTION_HOURS: "168"
+      KAFKA_LOG_SEGMENT_BYTES: "536870912"
+      KAFKA_COMPRESSION_TYPE: "snappy"
+      KAFKA_MESSAGE_MAX_BYTES: "5242880"
+      KAFKA_REPLICA_FETCH_MAX_BYTES: "5242880"
+      KAFKA_NUM_NETWORK_THREADS: "8"
+      KAFKA_NUM_IO_THREADS: "16"
+      KAFKA_SOCKET_SEND_BUFFER_BYTES: "1048576"
+      KAFKA_SOCKET_RECEIVE_BUFFER_BYTES: "1048576"
       CLUSTER_ID: "fraud-detection-cluster-001"
     networks:
       - fraud-network
@@ -39,19 +48,62 @@ services:
     entrypoint: ["/bin/bash", "-c"]
     command:
       - |
-        /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:9092 --topic raw_txn --partitions 3 --replication-factor 1
-        /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:9092 --topic scored --partitions 3 --replication-factor 1
-        /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:9092 --topic alerts --partitions 3 --replication-factor 1
-        echo "Topics created successfully"
+        /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:9092 --topic raw_txn --partitions 12 --replication-factor 1 --config retention.ms=604800000 --config compression.type=snappy
+        /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:9092 --topic scored --partitions 12 --replication-factor 1 --config retention.ms=604800000 --config compression.type=snappy
+        /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:9092 --topic alerts --partitions 12 --replication-factor 1 --config retention.ms=2592000000 --config compression.type=snappy
+        /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:9092 --topic audit --partitions 6 --replication-factor 1 --config retention.ms=7776000000 --config compression.type=snappy
+        /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:9092 --topic usage-events --partitions 6 --replication-factor 1 --config retention.ms=86400000
+        echo "Topics created successfully with 12 partitions for scale"
     networks:
       - fraud-network
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: fraud-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: fraud
+      POSTGRES_USER: fraud
+      POSTGRES_PASSWORD: fraud
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.utf8"
+    command: >
+      postgres
+        -c max_connections=200
+        -c shared_buffers=256MB
+        -c effective_cache_size=1GB
+        -c work_mem=4MB
+        -c maintenance_work_mem=64MB
+        -c wal_level=replica
+        -c checkpoint_completion_target=0.9
+        -c random_page_cost=1.1
+        -c effective_io_concurrency=200
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - fraud-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fraud -d fraud"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
 
   redis:
     image: redis:7-alpine
     container_name: fraud-redis
     ports:
       - "6379:6379"
-    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    command: >
+      redis-server
+        --appendonly yes
+        --maxmemory 512mb
+        --maxmemory-policy allkeys-lru
+        --tcp-keepalive 300
+        --timeout 0
+        --tcp-backlog 511
+        --hz 20
+        --aof-rewrite-incremental-fsync yes
     networks:
       - fraud-network
     healthcheck:
@@ -152,6 +204,7 @@ services:
       retries: 5
 
 volumes:
+  postgres-data:
   clickhouse-data:
   minio-data:
   prometheus-data:
