@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev, "release/*"]
   pull_request:
     branches: [main]
 
@@ -12,6 +12,8 @@ concurrency:
 
 env:
   PYTHON_VERSION: "3.12"
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/${{ github.repository }}
 
 jobs:
   lint:
@@ -48,8 +50,27 @@ jobs:
         run: mypy shared/ scoring/ simulator/ --ignore-missing-imports --no-strict --allow-untyped-defs
         continue-on-error: true
 
+  security:
+    name: Security Scan (Bandit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: pip install bandit[toml]
+      - name: Bandit scan
+        run: |
+          bandit -r scoring/ shared/ feature_store/ \
+            --severity-level medium --confidence-level medium \
+            -f json -o bandit-report.json || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bandit-report
+          path: bandit-report.json
+
   test:
-    name: Test
+    name: Test (with PostgreSQL + Redis)
     runs-on: ubuntu-latest
     services:
       redis:
@@ -61,6 +82,19 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: fraud_test
+          POSTGRES_USER: fraud
+          POSTGRES_PASSWORD: fraud
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U fraud"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
 
@@ -85,6 +119,8 @@ jobs:
       - name: Run tests with coverage
         env:
           REDIS_URL: redis://localhost:6379
+          DATABASE_URL: postgresql+asyncpg://fraud:fraud@localhost:5432/fraud_test
+          API_AUTH_ENABLED: "false"
         run: |
           pytest --cov=shared --cov=scoring --cov=feature_store --cov=alert_service --cov=simulator \
             --cov-report=xml --cov-report=term-missing \

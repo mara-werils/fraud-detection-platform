@@ -1,0 +1,134 @@
+name: Deploy
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/${{ github.repository }}
+  K8S_NAMESPACE: fraud-detection
+
+jobs:
+  # ── Build & Push tagged images ────────────────────────────────────────────
+  build-and-push:
+    name: Build & Push (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    strategy:
+      matrix:
+        service: [scoring, feature-store, alert-service, dashboard]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract version tag
+        id: version
+        run: echo "tag=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push ${{ matrix.service }}
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./${{ matrix.service }}/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}/${{ matrix.service }}:${{ steps.version.outputs.tag }}
+            ${{ env.IMAGE_PREFIX }}/${{ matrix.service }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            VERSION=${{ steps.version.outputs.tag }}
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
+            GIT_SHA=${{ github.sha }}
+
+  # ── Database migrations ───────────────────────────────────────────────────
+  migrate:
+    name: Run DB Migrations
+    runs-on: ubuntu-latest
+    needs: [build-and-push]
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install migration tools
+        run: pip install alembic asyncpg sqlalchemy
+
+      - name: Run migrations
+        env:
+          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+        run: alembic upgrade head
+
+  # ── Deploy to Kubernetes ──────────────────────────────────────────────────
+  deploy:
+    name: Deploy to Kubernetes
+    runs-on: ubuntu-latest
+    needs: [migrate]
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure kubectl
+        uses: azure/k8s-set-context@v4
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+
+      - name: Extract version tag
+        id: version
+        run: echo "tag=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+
+      - name: Update image tags in manifests
+        run: |
+          for svc in scoring feature-store alert-service dashboard; do
+            kubectl set image deployment/fraud-${svc} \
+              ${svc}=${{ env.IMAGE_PREFIX }}/${svc}:${{ steps.version.outputs.tag }} \
+              -n ${{ env.K8S_NAMESPACE }}
+          done
+
+      - name: Wait for rollout
+        run: |
+          for svc in scoring feature-store alert-service dashboard; do
+            kubectl rollout status deployment/fraud-${svc} \
+              -n ${{ env.K8S_NAMESPACE }} \
+              --timeout=300s
+          done
+
+      - name: Smoke test
+        run: |
+          sleep 10
+          SCORING_URL=$(kubectl get svc fraud-scoring-svc -n ${{ env.K8S_NAMESPACE }} \
+            -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          curl -f "http://${SCORING_URL}/health" || exit 1
+
+      - name: Notify on success
+        if: success()
+        run: |
+          echo "Deployment ${{ steps.version.outputs.tag }} completed successfully"
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          echo "Deployment failed — rolling back"
+          for svc in scoring feature-store alert-service dashboard; do
+            kubectl rollout undo deployment/fraud-${svc} -n ${{ env.K8S_NAMESPACE }}
+          done
