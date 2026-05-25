@@ -10,7 +10,6 @@ Provides risk assessment across currency dimensions including:
 
 from __future__ import annotations
 
-import math
 from decimal import Decimal
 from enum import StrEnum
 from typing import Any

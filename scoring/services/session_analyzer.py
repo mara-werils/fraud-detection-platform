@@ -19,7 +19,7 @@ import asyncio
 import time
 import uuid
 from collections import defaultdict, deque
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
 
@@ -94,7 +94,7 @@ class SessionEvent(BaseModel):
     device_id: str
     ip_address: str
     event_type: EventType
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -146,7 +146,7 @@ class SessionCluster(BaseModel):
     session_ids: list[str]
     link_reason: str  # e.g. "shared_device" | "shared_ip" | "same_user"
     risk_score: float = 0.0
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 # ── Internal lightweight event record ─────────────────────────────────────────

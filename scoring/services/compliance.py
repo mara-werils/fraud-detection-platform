@@ -7,7 +7,7 @@ audit summaries suitable for regulatory reporting and internal governance.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from enum import Enum
 from typing import Any
 
@@ -79,9 +79,9 @@ class ComplianceCheck(BaseModel):
     severity: RiskLevel
     details: str
     remediation: str
-    last_checked: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    last_checked: datetime = Field(default_factory=lambda: datetime.now(UTC))
     next_check: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc) + timedelta(days=30)
+        default_factory=lambda: datetime.now(UTC) + timedelta(days=30)
     )
 
 
@@ -89,7 +89,7 @@ class ComplianceReport(BaseModel):
     """Full compliance report for a standard over a time window."""
 
     report_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    generated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     period_start: datetime
     period_end: datetime
     standard: ComplianceStandard
@@ -126,7 +126,7 @@ class AuditSummary(BaseModel):
     data_export_events: int
     policy_violations: int
     high_risk_events: list[dict[str, Any]]
-    generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    generated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 # ---------------------------------------------------------------------------
@@ -143,7 +143,7 @@ def _check(
     remediation: str,
     next_days: int = 30,
 ) -> ComplianceCheck:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     return ComplianceCheck(
         standard=standard,
         category=category,
@@ -693,7 +693,7 @@ class ComplianceService:
                     steps=[step.strip() for step in c.remediation.split(".") if step.strip()],
                     estimated_effort_days=effort_days,
                     owner=owner,
-                    due_date=datetime.now(timezone.utc) + timedelta(days=effort_days),
+                    due_date=datetime.now(UTC) + timedelta(days=effort_days),
                 )
             )
         logger.info(

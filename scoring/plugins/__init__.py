@@ -124,7 +124,7 @@ from scoring.plugins.base import (
     PluginScore,
     ScorerPlugin,
 )
-from scoring.plugins.loader import PluginLoadError, PluginLoader
+from scoring.plugins.loader import PluginLoader, PluginLoadError
 from scoring.plugins.registry import PluginRegistry, registry
 
 __all__ = [

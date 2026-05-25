@@ -16,7 +16,7 @@ import hmac
 import json
 import random
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from uuid import uuid4
 
@@ -80,7 +80,7 @@ class WebhookPayload(BaseModel):
     payload: dict[str, Any]
     target_url: str
     headers: dict[str, str] = Field(default_factory=dict)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class DeliveryAttempt(BaseModel):
@@ -90,7 +90,7 @@ class DeliveryAttempt(BaseModel):
     status_code: int | None = None
     response_body: str | None = None
     error: str | None = None
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
     latency_ms: float = 0.0
 
     @property

@@ -58,12 +58,11 @@ Lifecycle
 from __future__ import annotations
 
 import threading
-from decimal import Decimal
 from typing import Any
 
 import structlog
 
-from scoring.plugins.base import PluginLifecycleMixin, PluginScore, ScorerPlugin
+from scoring.plugins.base import PluginScore, ScorerPlugin
 from shared.schemas import FeatureVector, Transaction
 
 logger = structlog.get_logger(__name__)

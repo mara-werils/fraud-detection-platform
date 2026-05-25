@@ -38,14 +38,13 @@ Typical usage::
 
 from __future__ import annotations
 
-import time
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import structlog
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator
 
 from shared.schemas import FeatureVector, Transaction
 

@@ -9,7 +9,7 @@ from __future__ import annotations
 import asyncio
 import uuid
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import structlog
@@ -95,7 +95,7 @@ class UsageMeter:
             "request_size": request_size,
             "response_size": response_size,
             "billed_units": units,
-            "timestamp": datetime.now(timezone.utc),
+            "timestamp": datetime.now(UTC),
         }
 
         # Fast in-memory counter

@@ -13,7 +13,7 @@ from __future__ import annotations
 import time
 from collections import deque
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import structlog
@@ -107,7 +107,7 @@ class SLOMonitor:
         self._latency_p99 = WindowedCounter(window_seconds=3600)
         self._latency_p95 = WindowedCounter(window_seconds=3600)
         self._latency_values: deque = deque(maxlen=10_000)
-        self._started_at = datetime.now(timezone.utc)
+        self._started_at = datetime.now(UTC)
 
     def record_request(
         self,
@@ -162,9 +162,9 @@ class SLOMonitor:
     def report(self) -> dict[str, Any]:
         """Return a human-readable SLO status report."""
         return {
-            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "generated_at": datetime.now(UTC).isoformat(),
             "uptime_hours": round(
-                (datetime.now(timezone.utc) - self._started_at).total_seconds() / 3600, 2
+                (datetime.now(UTC) - self._started_at).total_seconds() / 3600, 2
             ),
             "slos": {
                 "availability": {

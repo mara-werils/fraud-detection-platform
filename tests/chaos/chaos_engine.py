@@ -8,8 +8,6 @@ from __future__ import annotations
 
 import asyncio
 import random
-import statistics
-import time
 import uuid
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager

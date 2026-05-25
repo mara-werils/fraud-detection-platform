@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 
@@ -23,7 +23,7 @@ async def get_my_usage(
     if not usage_meter:
         raise HTTPException(status_code=503, detail="Usage metering not available")
 
-    since = datetime.now(timezone.utc) - timedelta(days=days)
+    since = datetime.now(UTC) - timedelta(days=days)
     stats = await usage_meter.get_org_usage(current_user.org_id, since=since)
     realtime = await usage_meter.get_realtime_counts(current_user.org_id)
     return {**stats, **realtime, "period_days": days}
@@ -41,6 +41,6 @@ async def get_org_usage(
     if not usage_meter:
         raise HTTPException(status_code=503, detail="Usage metering not available")
 
-    since = datetime.now(timezone.utc) - timedelta(days=days)
+    since = datetime.now(UTC) - timedelta(days=days)
     stats = await usage_meter.get_org_usage(org_id, since=since)
     return {**stats, "period_days": days}

@@ -15,12 +15,12 @@ Core concepts
 
 from __future__ import annotations
 
-import itertools
 import math
 import time
 from collections import defaultdict, deque
-from datetime import datetime, timezone
-from typing import Any, Callable, Literal
+from collections.abc import Callable
+from datetime import UTC, datetime
+from typing import Any, Literal
 
 import numpy as np
 import structlog
@@ -165,7 +165,7 @@ class ExplanationResult(BaseModel):
     natural_language_explanation: str = Field(
         ..., description="Plain-English explanation of the scoring decision"
     )
-    computed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    computed_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     shapley_samples: int = Field(
         default=0, description="Number of Monte-Carlo permutation samples used"
     )

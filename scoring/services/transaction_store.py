@@ -6,12 +6,10 @@ The in-memory store is suitable for development and demonstration.
 
 from __future__ import annotations
 
-import bisect
 from collections import defaultdict
 from datetime import datetime
 from threading import Lock
 from typing import Any
-from uuid import UUID
 
 import structlog
 

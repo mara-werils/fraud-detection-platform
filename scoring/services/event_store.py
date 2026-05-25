@@ -16,9 +16,10 @@ from __future__ import annotations
 import asyncio
 import uuid
 from collections import defaultdict
-from datetime import datetime, timezone
+from collections.abc import AsyncIterator, Awaitable, Callable
+from datetime import UTC, datetime
 from enum import StrEnum
-from typing import Any, AsyncIterator, Callable, Awaitable
+from typing import Any
 
 import structlog
 from prometheus_client import Counter, Gauge
@@ -106,7 +107,7 @@ class Event(BaseModel):
 
     # Ordering / concurrency
     timestamp: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(UTC),
     )
     version: int = 1  # monotonically increasing per aggregate
 

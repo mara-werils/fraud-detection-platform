@@ -10,9 +10,9 @@ from __future__ import annotations
 
 import asyncio
 import time
-from collections import deque
+from collections.abc import Callable
 from enum import StrEnum
-from typing import Any, Callable, TypeVar
+from typing import Any, TypeVar
 
 import structlog
 
@@ -145,7 +145,7 @@ class CircuitBreaker:
                 result = func(*args, **kwargs)
             self._on_success()
             return result
-        except Exception as exc:
+        except Exception:
             self._on_failure()
             raise
 

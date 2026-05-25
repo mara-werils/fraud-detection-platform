@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 import structlog
 from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
-from scoring.services.case_manager import CasePriority, CaseStatus, FraudCase
+from scoring.services.case_manager import FraudCase
 
 logger = structlog.get_logger(__name__)
 

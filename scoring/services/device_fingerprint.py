@@ -14,7 +14,7 @@ import hashlib
 import re
 import time
 from collections import defaultdict
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any, Protocol
 
@@ -155,8 +155,8 @@ class DeviceFingerprint(BaseModel):
     # Identity
     device_id: str = Field(..., description="SHA-256 of the stable signal set")
     fuzzy_id: str = Field(..., description="SHA-256 of a softer signal set tolerant to minor changes")
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    last_seen_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    last_seen_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     # Parsed attributes
     parsed_ua: ParsedUserAgent
@@ -198,13 +198,13 @@ class DeviceFingerprint(BaseModel):
 
     def touch(self) -> None:
         """Update last_seen_at and increment counter."""
-        self.last_seen_at = datetime.now(timezone.utc)
+        self.last_seen_at = datetime.now(UTC)
         self.seen_count += 1
 
     @property
     def age_days(self) -> float:
         """Days since the device was first seen."""
-        delta = datetime.now(timezone.utc) - self.created_at
+        delta = datetime.now(UTC) - self.created_at
         return delta.total_seconds() / 86_400
 
 
@@ -222,7 +222,7 @@ class DeviceRiskAssessment(BaseModel):
 
     user_id: str
     device_id: str
-    assessed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    assessed_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     risk_score: float = Field(..., ge=0.0, le=1.0, description="0 = no risk; 1 = maximum risk")
     risk_level: RiskLevel
@@ -578,7 +578,7 @@ class DeviceFingerprintService:
 
         # Check if we already know this device so we can preserve history
         existing: DeviceFingerprint | None = await self._load_device(device_id)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         if existing is not None:
             existing.touch()

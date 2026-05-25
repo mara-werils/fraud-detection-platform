@@ -15,10 +15,11 @@ from __future__ import annotations
 
 import re
 from collections import defaultdict
-from datetime import date, datetime, timezone
+from collections.abc import Callable
+from datetime import UTC, date, datetime
 from enum import Enum
 from functools import wraps
-from typing import Any, Callable
+from typing import Any
 
 import structlog
 from fastapi import APIRouter, Request, Response
@@ -104,12 +105,12 @@ class DeprecationPolicy(BaseModel):
     @property
     def sunset_datetime(self) -> datetime:
         """Return sunset date as a UTC-aware datetime (used in HTTP headers)."""
-        return datetime.combine(self.sunset_at, datetime.min.time(), tzinfo=timezone.utc)
+        return datetime.combine(self.sunset_at, datetime.min.time(), tzinfo=UTC)
 
     @property
     def deprecation_header(self) -> str:
         """RFC 8594 ``Deprecation`` header value (HTTP-date)."""
-        dt = datetime.combine(self.deprecated_at, datetime.min.time(), tzinfo=timezone.utc)
+        dt = datetime.combine(self.deprecated_at, datetime.min.time(), tzinfo=UTC)
         return dt.strftime("%a, %d %b %Y %H:%M:%S GMT")
 
     @property
@@ -499,8 +500,8 @@ class APIVersionRouter:
             async def wrapper(*args: Any, **kwargs: Any) -> Any:
                 result = await func(*args, **kwargs)
 
-                since_dt = datetime.combine(since, datetime.min.time(), tzinfo=timezone.utc)
-                sunset_dt = datetime.combine(sunset_date, datetime.min.time(), tzinfo=timezone.utc)
+                since_dt = datetime.combine(since, datetime.min.time(), tzinfo=UTC)
+                sunset_dt = datetime.combine(sunset_date, datetime.min.time(), tzinfo=UTC)
                 fmt = "%a, %d %b %Y %H:%M:%S GMT"
 
                 if isinstance(result, Response):

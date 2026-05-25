@@ -216,9 +216,8 @@ class EntityListService:
         """Check a single entity across all lists (blocklist first)."""
         entity_key = (str(entity_type), entity_value)
 
-        with LIST_CHECK_DURATION.time():
-            with self._lock:
-                candidates = list(self._by_entity.get(entity_key, []))
+        with LIST_CHECK_DURATION.time(), self._lock:
+            candidates = list(self._by_entity.get(entity_key, []))
 
         # Prioritise: BLOCKLIST > ALLOWLIST > WATCHLIST
         priority = {ListType.BLOCKLIST: 0, ListType.ALLOWLIST: 1, ListType.WATCHLIST: 2}

@@ -30,21 +30,20 @@ loss** operation.  Never run on production without a full backup.
 
 from __future__ import annotations
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql as pg
-
 from alembic import op
+from sqlalchemy.dialects import postgresql as pg
 
 # ---------------------------------------------------------------------------
 # Revision identifiers
 # ---------------------------------------------------------------------------
 
 revision: str = "001"
-down_revision: Union[str, Sequence[str], None] = None
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | Sequence[str] | None = None
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 # ---------------------------------------------------------------------------

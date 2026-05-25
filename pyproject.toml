@@ -77,7 +77,7 @@ line-length = 100
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "A", "SIM"]
-ignore = ["E501", "SIM105", "SIM114", "SIM108", "N803", "N806", "B905"]
+ignore = ["E501", "SIM105", "SIM114", "SIM108", "SIM102", "SIM103", "SIM118", "N803", "N806", "B905", "B008", "UP042", "A002"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["shared"]

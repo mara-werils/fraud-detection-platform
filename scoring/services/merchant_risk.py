@@ -10,10 +10,9 @@ the in-memory implementation here is suitable for development and demonstration.
 
 from __future__ import annotations
 
-import math
 import statistics
 from collections import defaultdict, deque
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from threading import Lock
 from typing import Any
@@ -138,8 +137,8 @@ class MerchantProfile(BaseModel):
     risk_level: RiskLevel = RiskLevel.LOW
 
     # Temporal
-    first_seen: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    last_seen: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    first_seen: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    last_seen: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     # Velocity (counts in window)
     velocity_1h: int = 0
@@ -184,7 +183,7 @@ class MerchantRiskAssessment(BaseModel):
     fraud_rate_percentile: float = Field(default=0.0, ge=0.0, le=100.0)
     volume_anomaly: bool = False
     category_risk: float = Field(default=0.0, ge=0.0, le=1.0)
-    assessed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    assessed_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -227,7 +226,7 @@ class MerchantAnomaly(BaseModel):
     anomaly_type: str
     description: str
     severity: RiskLevel
-    detected_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    detected_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     metadata: dict[str, Any] = Field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -339,7 +338,7 @@ class MerchantRiskService:
             category: Merchant category; used to initialise the profile.
             country: ISO-3166-1 alpha-2 country code.
         """
-        ts = timestamp or datetime.now(timezone.utc)
+        ts = timestamp or datetime.now(UTC)
         record = _TxnRecord(
             amount=amount,
             fraud_score=max(0.0, min(1.0, fraud_score)),
@@ -561,7 +560,7 @@ class MerchantRiskService:
           - ``dormant_reactivation``: Merchant inactive for >30 days suddenly active.
           - ``single_user_dominance``: >80% of 24-hour transactions from one user.
         """
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         anomalies: list[MerchantAnomaly] = []
 
         with self._lock:
@@ -728,7 +727,7 @@ class MerchantRiskService:
         events: list[_TxnRecord],
     ) -> MerchantProfile:
         """Derive a MerchantProfile from the raw event list."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         category = MerchantCategory(meta.get("category", MerchantCategory.GENERAL))
         country = meta.get("country", "US")
 

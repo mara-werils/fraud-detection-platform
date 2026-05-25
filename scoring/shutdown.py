@@ -71,7 +71,7 @@ class GracefulShutdownManager:
                 if stop and asyncio.iscoroutinefunction(stop):
                     await asyncio.wait_for(stop(), timeout=10.0)
                     await logger.ainfo("service_stopped", name=name)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 await logger.awarning("service_stop_timeout", name=name)
             except Exception as exc:
                 await logger.awarning("service_stop_error", name=name, error=str(exc))

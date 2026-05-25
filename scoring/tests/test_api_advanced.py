@@ -9,7 +9,6 @@ from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal
 from typing import Any
-from unittest.mock import MagicMock
 from uuid import UUID, uuid4
 
 import pytest
@@ -24,9 +23,7 @@ from scoring.services.drift_detector import DriftDetector
 from scoring.services.feedback_store import FeedbackStore
 from scoring.services.transaction_store import TransactionStore
 from shared.schemas import (
-    FeatureVector,
     ScoredTransaction,
-    Transaction,
     TransactionType,
 )
 

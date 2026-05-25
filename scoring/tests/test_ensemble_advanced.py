@@ -7,15 +7,14 @@ mock XGBoost / GNN scorers, and concurrent scoring.
 from __future__ import annotations
 
 import asyncio
-from decimal import Decimal
 from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from decimal import Decimal
+from unittest.mock import AsyncMock, MagicMock
 from uuid import UUID
 
 import pytest
 
 from scoring.models.ensemble import (
-    DEFAULT_WEIGHTS,
     Decision,
     EnsembleScorer,
 )

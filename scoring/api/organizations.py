@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
-import re
 import uuid
 from datetime import datetime
 
 import structlog
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field, field_validator
-from sqlalchemy import select, update
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from scoring.db.engine import get_db_session
 from scoring.db.models import Organization

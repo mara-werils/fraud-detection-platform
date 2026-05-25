@@ -10,8 +10,7 @@ All routes read from the AnalyticsEngine instance registered on
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-from typing import Any
+from datetime import UTC, datetime, timedelta
 
 import structlog
 from fastapi import APIRouter, HTTPException, Query, Request
@@ -51,7 +50,7 @@ def _parse_ts(value: str | None, default: datetime) -> datetime:
     try:
         dt = datetime.fromisoformat(value)
         if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
+            dt = dt.replace(tzinfo=UTC)
         return dt
     except ValueError as exc:
         raise HTTPException(
@@ -71,7 +70,7 @@ class PatternsResponse(BaseModel):
 class GeoResponse(BaseModel):
     points: list[GeoPoint]
     total_countries: int
-    generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    generated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class DistributionResponse(BaseModel):
@@ -156,7 +155,7 @@ async def get_timeseries(
     """Return a bucketed time series for the requested metric."""
     engine = _get_engine(request)
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     parsed_from = _parse_ts(from_ts, now - timedelta(hours=24))
     parsed_to = _parse_ts(to_ts, now)
 
@@ -213,7 +212,7 @@ async def get_distribution(
     """Return the fraud score distribution for a given time window."""
     engine = _get_engine(request)
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     parsed_from = _parse_ts(from_ts, now - timedelta(hours=24))
     parsed_to = _parse_ts(to_ts, now)
 

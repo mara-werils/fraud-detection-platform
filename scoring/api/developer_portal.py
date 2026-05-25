@@ -12,7 +12,7 @@ from __future__ import annotations
 import hashlib
 import secrets
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -20,7 +20,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 
 from scoring.api.jwt_auth import CurrentUser, require_user
-from scoring.api.rbac import require_permission, PERM_MANAGE_API_KEYS
+from scoring.api.rbac import PERM_MANAGE_API_KEYS, require_permission
 from scoring.db.engine import get_db_session
 from scoring.db.models import APIKey, Organization
 
@@ -79,7 +79,7 @@ async def create_api_key(
     expires_at = None
     if body.expires_days:
         from datetime import timedelta
-        expires_at = datetime.now(timezone.utc) + timedelta(days=body.expires_days)
+        expires_at = datetime.now(UTC) + timedelta(days=body.expires_days)
 
     record = APIKey(
         id=uuid.uuid4(),
@@ -111,7 +111,7 @@ async def create_api_key(
         scopes=body.scopes,
         rate_limit=body.rate_limit,
         is_active=True,
-        created_at=record.created_at or datetime.now(timezone.utc),
+        created_at=record.created_at or datetime.now(UTC),
         expires_at=expires_at,
         raw_key=raw_key,  # Only shown once
     )
@@ -139,7 +139,7 @@ async def list_api_keys(
             scopes=k.scopes or [],
             rate_limit=k.rate_limit,
             is_active=k.is_active,
-            created_at=k.created_at or datetime.now(timezone.utc),
+            created_at=k.created_at or datetime.now(UTC),
             expires_at=k.expires_at,
         )
         for k in keys

@@ -10,46 +10,46 @@ import structlog
 from fastapi import FastAPI
 from redis.asyncio import Redis
 
+from scoring.api.ab_testing import router as ab_router
+from scoring.api.analytics import router as analytics_router
+from scoring.api.auth import register_api_key
+from scoring.api.batch import router as batch_router
+from scoring.api.cases import router as cases_router
+from scoring.api.drift import router as drift_router
+from scoring.api.entity_lists import router as entity_lists_router
+from scoring.api.explainability import router as explainability_router
+from scoring.api.export import router as export_router
+from scoring.api.feedback import router as feedback_router
 from scoring.api.middleware import setup_middleware
 from scoring.api.routes import router
-from scoring.api.batch import router as batch_router
-from scoring.api.transactions import router as transactions_router
-from scoring.api.cases import router as cases_router
-from scoring.api.feedback import router as feedback_router
-from scoring.api.drift import router as drift_router
-from scoring.api.ab_testing import router as ab_router
-from scoring.api.explainability import router as explainability_router
 from scoring.api.sanctions import router as sanctions_router
-from scoring.api.webhooks import router as webhooks_router
-from scoring.api.export import router as export_router
-from scoring.api.analytics import router as analytics_router
-from scoring.api.entity_lists import router as entity_lists_router
+from scoring.api.transactions import router as transactions_router
 from scoring.api.versioning import VersioningMiddleware
-from scoring.api.auth import register_api_key
+from scoring.api.webhooks import router as webhooks_router
 from scoring.config import ScoringConfig
 from scoring.consumer import create_consumer_handler
 from scoring.models.ensemble import EnsembleScorer
 from scoring.models.rule_engine import RuleEngine
-from scoring.services.case_manager import CaseManager
-from scoring.services.drift_detector import DriftDetector
-from scoring.services.feedback_store import FeedbackStore
-from scoring.services.sanctions_screener import SanctionsScreener
-from scoring.services.transaction_store import TransactionStore
-from scoring.services.webhook_manager import WebhookManager
+from scoring.plugins.registry import PluginRegistry
+from scoring.services.alert_routing import AlertRoutingEngine
 from scoring.services.analytics_engine import AnalyticsEngine
+from scoring.services.case_manager import CaseManager
+from scoring.services.currency_risk import CurrencyRiskService
 from scoring.services.device_fingerprint import DeviceFingerprintService
-from scoring.services.ip_intelligence import IPIntelligenceService
-from scoring.services.graph_analysis import TransactionGraphAnalyzer
-from scoring.services.merchant_risk import MerchantRiskService
+from scoring.services.drift_detector import DriftDetector
 from scoring.services.entity_lists import EntityListService
 from scoring.services.event_store import EventStore
-from scoring.services.shadow_mode import ShadowModeService
-from scoring.services.session_analyzer import SessionAnalyzer
-from scoring.services.alert_routing import AlertRoutingEngine
-from scoring.services.webhook_delivery import WebhookDeliveryService
-from scoring.services.currency_risk import CurrencyRiskService
 from scoring.services.explainability import ExplainabilityService
-from scoring.plugins.registry import PluginRegistry
+from scoring.services.feedback_store import FeedbackStore
+from scoring.services.graph_analysis import TransactionGraphAnalyzer
+from scoring.services.ip_intelligence import IPIntelligenceService
+from scoring.services.merchant_risk import MerchantRiskService
+from scoring.services.sanctions_screener import SanctionsScreener
+from scoring.services.session_analyzer import SessionAnalyzer
+from scoring.services.shadow_mode import ShadowModeService
+from scoring.services.transaction_store import TransactionStore
+from scoring.services.webhook_delivery import WebhookDeliveryService
+from scoring.services.webhook_manager import WebhookManager
 from shared.kafka_utils import KafkaConsumerWrapper, KafkaProducerWrapper
 from shared.logging import setup_logging
 from shared.metrics import create_metrics

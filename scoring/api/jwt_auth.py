@@ -2,19 +2,16 @@
 
 from __future__ import annotations
 
-import hashlib
 import uuid
-from datetime import datetime, timedelta, timezone
-from typing import Annotated
+from datetime import UTC, datetime, timedelta
 
 import structlog
-from fastapi import APIRouter, Depends, HTTPException, Request, Security
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from scoring.config import ScoringConfig
 from scoring.db.engine import get_db_session
@@ -58,21 +55,21 @@ def create_access_token(
     config: ScoringConfig | None = None,
 ) -> str:
     cfg = config or _get_config()
-    expire = datetime.now(timezone.utc) + timedelta(minutes=cfg.jwt_access_token_expire_minutes)
+    expire = datetime.now(UTC) + timedelta(minutes=cfg.jwt_access_token_expire_minutes)
     payload = {
         "sub": subject,
         "org_id": org_id,
         "role": role,
         "type": "access",
         "exp": expire,
-        "iat": datetime.now(timezone.utc),
+        "iat": datetime.now(UTC),
     }
     return jwt.encode(payload, cfg.jwt_secret_key, algorithm=cfg.jwt_algorithm)
 
 
 def create_refresh_token(subject: str, org_id: str, config: ScoringConfig | None = None) -> str:
     cfg = config or _get_config()
-    expire = datetime.now(timezone.utc) + timedelta(days=cfg.jwt_refresh_token_expire_days)
+    expire = datetime.now(UTC) + timedelta(days=cfg.jwt_refresh_token_expire_days)
     payload = {
         "sub": subject,
         "org_id": org_id,

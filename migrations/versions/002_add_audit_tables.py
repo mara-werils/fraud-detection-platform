@@ -36,21 +36,20 @@ safe.  Existing audit_logs rows are unaffected.
 
 from __future__ import annotations
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql as pg
-
 from alembic import op
+from sqlalchemy.dialects import postgresql as pg
 
 # ---------------------------------------------------------------------------
 # Revision identifiers
 # ---------------------------------------------------------------------------
 
 revision: str = "002"
-down_revision: Union[str, Sequence[str], None] = "001"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | Sequence[str] | None = "001"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 # ---------------------------------------------------------------------------
