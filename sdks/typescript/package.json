@@ -1,0 +1,70 @@
+{
+  "name": "@fraud-detection/sdk",
+  "version": "1.0.0",
+  "description": "TypeScript SDK for the Fraud Detection Platform — score transactions, manage cases, and monitor model drift.",
+  "license": "MIT",
+  "author": "Fraud Detection Platform Team",
+  "homepage": "https://github.com/fraud-detection-platform",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fraud-detection-platform/fraud-detection-platform.git",
+    "directory": "sdks/typescript"
+  },
+  "keywords": [
+    "fraud",
+    "fraud-detection",
+    "fintech",
+    "ml",
+    "risk",
+    "sdk",
+    "typescript"
+  ],
+
+  "type": "module",
+
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+
+  "scripts": {
+    "build": "tsc --project tsconfig.json && node scripts/build-cjs.mjs",
+    "build:types": "tsc --project tsconfig.json --emitDeclarationOnly",
+    "clean": "rm -rf dist",
+    "prebuild": "npm run clean",
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest",
+    "test:watch": "node --experimental-vm-modules node_modules/.bin/jest --watch",
+    "lint": "eslint src --ext .ts",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "prepublishOnly": "npm run build && npm run typecheck"
+  },
+
+  "dependencies": {},
+
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0"
+  },
+
+  "peerDependencies": {},
+
+  "engines": {
+    "node": ">=18.0.0"
+  },
+
+  "sideEffects": false
+}
