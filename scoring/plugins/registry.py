@@ -344,8 +344,8 @@ class PluginRegistry:
         with self._lock:
             try:
                 return self._entries[name]
-            except KeyError:
-                raise KeyError(f"No plugin named {name!r} is registered.")
+            except KeyError as exc:
+                raise KeyError(f"No plugin named {name!r} is registered.") from exc
 
     def list_plugins(self, *, include_disabled: bool = True) -> list[PluginInfo]:
         """Snapshot of all registered plugins.

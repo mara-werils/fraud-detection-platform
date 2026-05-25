@@ -17,11 +17,10 @@ is no dependency on networkx or any other graph library.
 from __future__ import annotations
 
 import asyncio
-import math
 import random
 import time
 from collections import defaultdict, deque
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import structlog
@@ -131,7 +130,7 @@ class FraudRing(BaseModel):
     fraud_rate: float
     avg_fraud_score: float
     total_fraudulent_amount: float
-    detected_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    detected_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     confidence: float  # 0-1 confidence that this is a genuine fraud ring
 
 
@@ -267,7 +266,7 @@ class TransactionGraphAnalyzer:
                     remaining=len(self._edges),
                 )
 
-            now = datetime.now(timezone.utc)
+            _now = datetime.now(UTC)
 
             # Ensure nodes exist
             for nid, ntype in (
@@ -417,7 +416,7 @@ class TransactionGraphAnalyzer:
             groups[lbl].append(nid)
 
         communities: list[CommunityInfo] = []
-        for cid, (lbl, members) in enumerate(groups.items()):
+        for cid, (_, members) in enumerate(groups.items()):
             community = self._build_community_info(cid, members)
             communities.append(community)
 

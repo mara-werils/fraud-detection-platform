@@ -13,7 +13,6 @@ from __future__ import annotations
 import asyncio
 import time
 from dataclasses import dataclass, field
-from typing import Any
 
 import structlog
 
@@ -84,8 +83,8 @@ class BatchInferenceQueue:
                 self._queue.put(request),
                 timeout=5.0,
             )
-        except asyncio.TimeoutError:
-            raise RuntimeError("Batch inference queue full — backpressure exceeded")
+        except TimeoutError as exc:
+            raise RuntimeError("Batch inference queue full — backpressure exceeded") from exc
 
         return await future
 
@@ -110,7 +109,7 @@ class BatchInferenceQueue:
                 try:
                     item = await asyncio.wait_for(self._queue.get(), timeout=remaining)
                     batch.append(item)
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     break
                 except asyncio.CancelledError:
                     # Complete the current batch before stopping

@@ -16,9 +16,6 @@ import pytest
 from pydantic import ValidationError
 
 from shared.schemas import (
-    AlertEvent,
-    AlertSeverity,
-    AlertStatus,
     FeatureVector,
     ScoredTransaction,
     Transaction,
@@ -384,5 +381,5 @@ class TestOrjsonRoundTrip:
 
     def test_invalid_bytes_raise_on_deserialise(self) -> None:
         """from_json_bytes should raise when data is garbage."""
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             Transaction.from_json_bytes(b"not-json-at-all")

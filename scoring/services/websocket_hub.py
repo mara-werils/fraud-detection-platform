@@ -14,7 +14,6 @@ from __future__ import annotations
 import asyncio
 import json
 from collections import defaultdict
-from typing import Any
 
 import structlog
 from fastapi import WebSocket
@@ -150,7 +149,7 @@ class WebSocketHub:
 
 # ── FastAPI WebSocket endpoint ─────────────────────────────────────────────────
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query  # noqa: E402
 
 ws_router = APIRouter(tags=["websocket"])
 

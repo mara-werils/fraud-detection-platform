@@ -7,11 +7,10 @@ computed in-memory from the scored transaction stream.
 
 from __future__ import annotations
 
-import math
 import statistics
 from collections import Counter, defaultdict
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from threading import Lock
 from typing import Any
@@ -139,7 +138,7 @@ class DashboardMetrics(BaseModel):
 
     # Computed at
     generated_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(UTC),
         description="When these metrics were computed",
     )
 
@@ -172,7 +171,7 @@ class ModelPerformanceMetrics(BaseModel):
     auc_roc_estimate: float = Field(ge=0.0, le=1.0)
     avg_score_positive: float
     avg_score_negative: float
-    computed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    computed_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class GeoPoint(BaseModel):
@@ -318,7 +317,7 @@ class AnalyticsEngine:
 
     def get_dashboard_metrics(self) -> DashboardMetrics:
         """Return a snapshot of platform-wide real-time metrics."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
         cutoff_24h = now - _WINDOW_24H
 
@@ -490,7 +489,7 @@ class AnalyticsEngine:
 
     def get_top_fraud_patterns(self, limit: int = 10) -> list[FraudPattern]:
         """Identify recurring fraud signals from recent transactions."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         cutoff = now - timedelta(hours=72)
 
         with self._lock:
@@ -530,7 +529,7 @@ class AnalyticsEngine:
         """Compute precision/recall from analyst-confirmed feedback."""
         with self._lock:
             records_copy = list(self._records)
-            feedback_copy = dict(self._feedback)
+            _feedback_copy = dict(self._feedback)
 
         model_versions: Counter[str] = Counter(r.model_version for r in records_copy)
         dominant_version = model_versions.most_common(1)[0][0] if model_versions else "unknown"
@@ -573,7 +572,7 @@ class AnalyticsEngine:
 
     def get_geographic_heatmap(self) -> list[GeoPoint]:
         """Return per-country aggregated fraud statistics for a heatmap."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         cutoff = now - _WINDOW_24H
 
         with self._lock:
@@ -678,7 +677,7 @@ class AnalyticsEngine:
 def _aware(dt: datetime) -> datetime:
     """Ensure datetime is timezone-aware (assume UTC if naive)."""
     if dt.tzinfo is None:
-        return dt.replace(tzinfo=timezone.utc)
+        return dt.replace(tzinfo=UTC)
     return dt
 
 

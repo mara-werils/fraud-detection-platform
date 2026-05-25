@@ -9,9 +9,8 @@ Roles (from most to least privileged):
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from enum import StrEnum
-from functools import lru_cache
-from typing import Callable
 
 from fastapi import Depends, HTTPException
 
@@ -96,7 +95,7 @@ def require_role(role: Role) -> Callable:
             user_idx = role_order.index(user_role)
             required_idx = role_order.index(role)
         except ValueError:
-            raise HTTPException(status_code=403, detail="Unknown role")
+            raise HTTPException(status_code=403, detail="Unknown role") from None
 
         if user_idx < required_idx:
             raise HTTPException(

@@ -22,7 +22,7 @@ import math
 import random
 import sys
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any, Literal
 from uuid import uuid4
 
@@ -123,10 +123,10 @@ class GeneratorConfig(BaseModel):
     num_transactions: int = Field(default=100_000, ge=100)
     fraud_rate: float = Field(default=0.03, ge=0.0, le=1.0)
     start_date: datetime = Field(
-        default_factory=lambda: datetime(2024, 1, 1, tzinfo=timezone.utc)
+        default_factory=lambda: datetime(2024, 1, 1, tzinfo=UTC)
     )
     end_date: datetime = Field(
-        default_factory=lambda: datetime(2024, 12, 31, tzinfo=timezone.utc)
+        default_factory=lambda: datetime(2024, 12, 31, tzinfo=UTC)
     )
     output_format: Literal["csv", "json", "parquet"] = "parquet"
     output_path: str = "data/synthetic_dataset.parquet"
@@ -590,7 +590,7 @@ class SyntheticDataGenerator:
             avg_amount = max(5.0, min(avg_amount, 2000.0))
 
             # Higher income → more diverse merchants
-            merchant_count = self._rng.randint(2, 8)
+            _merchant_count = self._rng.randint(2, 8)
             usual_hours_count = self._rng.randint(3, 8)
             preferred_hours = sorted(
                 self._rng.sample(range(7, 23), k=min(usual_hours_count, 16))
@@ -683,7 +683,7 @@ class SyntheticDataGenerator:
         ts = datetime(
             year, chosen_month, self._rng.randint(1, days_in_month),
             hour, self._rng.randint(0, 59), self._rng.randint(0, 59),
-            tzinfo=timezone.utc,
+            tzinfo=UTC,
         )
         # Clamp to config date range
         if ts < self.config.start_date:
@@ -1106,8 +1106,8 @@ def main(argv: list[str] | None = None) -> None:
         num_merchants=args.num_merchants,
         num_transactions=args.num_transactions,
         fraud_rate=args.fraud_rate,
-        start_date=datetime.strptime(args.start_date, "%Y-%m-%d").replace(tzinfo=timezone.utc),
-        end_date=datetime.strptime(args.end_date, "%Y-%m-%d").replace(tzinfo=timezone.utc),
+        start_date=datetime.strptime(args.start_date, "%Y-%m-%d").replace(tzinfo=UTC),
+        end_date=datetime.strptime(args.end_date, "%Y-%m-%d").replace(tzinfo=UTC),
         output_format=args.output_format,
         output_path=args.output_path,
         seed=args.seed,

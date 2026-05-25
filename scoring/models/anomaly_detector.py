@@ -339,7 +339,7 @@ class IsolationForest:
         self._n_train = effective_samples
         self._trees = []
 
-        for i in range(self._n_estimators):
+        for _ in range(self._n_estimators):
             tree_rng = np.random.default_rng(self._master_rng.integers(0, 2**31))
             idx = tree_rng.choice(n, size=effective_samples, replace=False)
             subset = data[idx].astype(np.float64)

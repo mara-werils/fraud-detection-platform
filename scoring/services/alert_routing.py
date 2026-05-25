@@ -13,7 +13,7 @@ from __future__ import annotations
 import time
 import uuid
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
 from threading import Lock
@@ -163,7 +163,7 @@ class AlertEvent(BaseModel):
     sanctioned_entity: bool = False
     rule_triggers: list[str] = Field(default_factory=list)
     metadata: dict[str, Any] = Field(default_factory=dict)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     def get_field(self, field_name: str) -> Any:
         """Retrieve a top-level or metadata field by name."""
@@ -182,7 +182,7 @@ class RoutingDecision(BaseModel):
     assignee_group: str
     suppressed: bool = False
     escalation_policy_id: str | None = None
-    routed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    routed_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class EscalationResult(BaseModel):
@@ -611,7 +611,7 @@ class AlertRoutingEngine:
         previous_level = levels[current_idx - 1].level if current_idx > 0 else None
 
         new_idx = self._escalation_tracker.advance(alert_id)
-        next_level = levels[new_idx].level if new_idx < len(levels) else None
+        _next_level = levels[new_idx].level if new_idx < len(levels) else None
 
         ALERTS_ESCALATED_TOTAL.labels(
             from_level=previous_level.value if previous_level else "none",

@@ -16,7 +16,7 @@ import ipaddress
 import math
 import time
 from collections import defaultdict, deque
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
 from uuid import uuid4
@@ -145,7 +145,7 @@ class IPIntelligence(BaseModel):
     geo: GeoLocation | None = None
     abuse_score: float = Field(default=0.0, ge=0.0, le=1.0)
     abuse_report_count: int = 0
-    analyzed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    analyzed_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     @property
     def is_suspicious_infrastructure(self) -> bool:
@@ -166,7 +166,7 @@ class IPRiskAssessment(BaseModel):
     velocity_count: int = 0
     geo_distance_km: float | None = None
     recommended_action: str = "allow"
-    assessed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    assessed_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     details: dict[str, Any] = Field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -806,9 +806,9 @@ class IPIntelligenceService:
         """
         try:
             first_octet = int(ip.split(".")[0])
-            second_octet = int(ip.split(".")[1]) if "." in ip else 0
+            _second_octet = int(ip.split(".")[1]) if "." in ip else 0
         except (ValueError, IndexError):
-            first_octet, second_octet = 1, 1
+            first_octet, _second_octet = 1, 1
 
         # Deterministic mapping for consistent unit testing
         if first_octet < 50:

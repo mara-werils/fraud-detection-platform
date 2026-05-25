@@ -11,16 +11,14 @@ All tests are marked with @pytest.mark.integration.
 
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime
 from decimal import Decimal
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import UUID, uuid4
 
 import pytest
 
-from scoring.models.ensemble import Decision, EnsembleScorer
+from scoring.models.ensemble import EnsembleScorer
 from scoring.models.rule_engine import RuleEngine
 from scoring.services.case_manager import CaseManager, CaseStatus
 from scoring.services.feedback_store import FeedbackStore
@@ -352,7 +350,7 @@ class TestCaseLifecycle:
         mgr = CaseManager()
         txn1, txn2 = str(uuid4()), str(uuid4())
         c1 = mgr.create_case(txn1, "user_a", priority="high")
-        c2 = mgr.create_case(txn2, "user_b", priority="low")
+        _c2 = mgr.create_case(txn2, "user_b", priority="low")
         mgr.update_status(c1.case_id, "resolved_fraud")
 
         stats = mgr.stats()
@@ -400,7 +398,7 @@ class TestFeedbackToRetrainingFlow:
     def test_feedback_stats_agreement_rate(self) -> None:
         """When model and analyst agree, agreement_rate should be 1.0."""
         store = FeedbackStore()
-        for i in range(5):
+        for _ in range(5):
             store.add(
                 transaction_id=str(uuid4()),
                 is_fraud=True,

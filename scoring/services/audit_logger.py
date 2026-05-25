@@ -14,8 +14,7 @@ from __future__ import annotations
 import asyncio
 import json
 import uuid
-from datetime import datetime, timezone
-from typing import Any
+from datetime import UTC, datetime
 
 import structlog
 
@@ -101,7 +100,7 @@ class AuditLogger:
             "details": details or {},
             "ip_address": ip_address,
             "user_agent": user_agent,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
         await logger.ainfo(
@@ -140,7 +139,7 @@ class AuditLogger:
         offset: int = 0,
     ) -> list[dict]:
         """Query audit log for an org."""
-        from sqlalchemy import select, and_
+        from sqlalchemy import select
         async with get_db_session() as session:
             q = (
                 select(AuditLog)
@@ -216,9 +215,10 @@ class AuditLogger:
 
 # ── Audit API endpoint ─────────────────────────────────────────────────────────
 
-from fastapi import APIRouter, Depends, HTTPException, Request
-from scoring.api.jwt_auth import CurrentUser, require_user
-from scoring.api.rbac import require_analyst
+from fastapi import APIRouter, Depends, HTTPException, Request  # noqa: E402
+
+from scoring.api.jwt_auth import CurrentUser  # noqa: E402
+from scoring.api.rbac import require_analyst  # noqa: E402
 
 audit_router = APIRouter(prefix="/api/v1/audit", tags=["audit"])
 

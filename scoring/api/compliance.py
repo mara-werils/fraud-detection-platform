@@ -6,7 +6,7 @@ results, running on-demand checks, and fetching remediation plans.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import structlog
@@ -35,7 +35,7 @@ class ScoreResponse(BaseModel):
     """Compliance score response for one or all standards."""
 
     scores: dict[str, float]
-    generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    generated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class RunCheckResponse(BaseModel):
@@ -46,7 +46,7 @@ class RunCheckResponse(BaseModel):
     compliance_score: float
     overall_status: str
     checks: list[ComplianceCheck]
-    triggered_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    triggered_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class ScheduleRequest(BaseModel):
@@ -75,12 +75,12 @@ def _get_service(request: Request) -> ComplianceService:
 def _parse_standard(standard: str) -> ComplianceStandard:
     try:
         return ComplianceStandard(standard.upper())
-    except ValueError:
+    except ValueError as err:
         valid = [s.value for s in ComplianceStandard]
         raise HTTPException(
             status_code=422,
             detail=f"Unknown compliance standard '{standard}'. Valid values: {valid}",
-        )
+        ) from err
 
 
 # ---------------------------------------------------------------------------
@@ -110,7 +110,7 @@ async def get_compliance_report(
     """Generate and return a compliance report for the specified standard."""
     std = _parse_standard(standard)
     svc = _get_service(request)
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     period_start = now - timedelta(days=period_days)
 
     logger.info("api_compliance_report", standard=std.value, period_days=period_days)
@@ -277,7 +277,7 @@ async def get_audit_summary(
 ) -> AuditSummary:
     """Return an aggregated audit activity summary."""
     svc = _get_service(request)
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     period_start = now - timedelta(days=period_days)
 
     logger.info("api_audit_summary", period_days=period_days)
@@ -314,6 +314,6 @@ async def schedule_compliance_checks(
     return {
         "standard": std.value,
         "cron_expression": body.cron_expression,
-        "scheduled_at": datetime.now(timezone.utc).isoformat(),
+        "scheduled_at": datetime.now(UTC).isoformat(),
         "message": f"Compliance checks for {std.value} scheduled with cron '{body.cron_expression}'",
     }

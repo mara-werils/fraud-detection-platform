@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import structlog
 from fastapi import APIRouter, Request, Response
@@ -94,7 +94,7 @@ async def _check_scorer(app) -> ComponentStatus:
 @router.get("/health/live", include_in_schema=False)
 async def liveness():
     """Kubernetes liveness probe — always 200 if process is alive."""
-    return {"status": "alive", "timestamp": datetime.now(timezone.utc).isoformat()}
+    return {"status": "alive", "timestamp": datetime.now(UTC).isoformat()}
 
 
 @router.get("/health/ready")
@@ -117,7 +117,7 @@ async def readiness(request: Request):
             status=overall,
             version=request.app.version,
             uptime_seconds=round(time.time() - _START_TIME, 1),
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
             components=components,
         ).model_dump_json(),
         status_code=status_code,
@@ -151,26 +151,26 @@ async def detailed_status(request: Request):
 
     # SLO report
     slo_monitor = getattr(request.app.state, "slo_monitor", None)
-    slo_report = slo_monitor.report() if slo_monitor else {}
+    _slo_report = slo_monitor.report() if slo_monitor else {}
 
     # Batch queue stats
     batch_queue = getattr(request.app.state, "batch_queue", None)
-    batch_stats = batch_queue.stats() if batch_queue else {}
+    _batch_stats = batch_queue.stats() if batch_queue else {}
 
     # Circuit breaker stats
     redis_pool = getattr(request.app.state, "redis_pool", None)
-    cb_stats = redis_pool.stats() if redis_pool else {}
+    _cb_stats = redis_pool.stats() if redis_pool else {}
 
     # WS Hub stats
     ws_hub = getattr(request.app.state, "ws_hub", None)
-    ws_stats = ws_hub.stats() if ws_hub else {}
+    _ws_stats = ws_hub.stats() if ws_hub else {}
 
     return Response(
         content=HealthResponse(
             status=overall,
             version=request.app.version,
             uptime_seconds=round(time.time() - _START_TIME, 1),
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
             components=components,
         ).model_dump_json(),
         status_code=code,

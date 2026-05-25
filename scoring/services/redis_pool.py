@@ -14,10 +14,10 @@ from enum import Enum
 from typing import Any
 
 import structlog
-from redis.asyncio import Redis, ConnectionPool
+from redis.asyncio import ConnectionPool, Redis
 from redis.asyncio.retry import Retry
 from redis.backoff import ExponentialBackoff
-from redis.exceptions import ConnectionError, RedisError, TimeoutError
+from redis.exceptions import ConnectionError, RedisError, TimeoutError  # noqa: A004
 
 logger = structlog.get_logger(__name__)
 
@@ -76,7 +76,7 @@ class CircuitBreaker:
             result = await coro
             await self._on_success()
             return result
-        except (ConnectionError, TimeoutError, RedisError) as exc:
+        except (ConnectionError, TimeoutError, RedisError):
             await self._on_failure()
             raise
 

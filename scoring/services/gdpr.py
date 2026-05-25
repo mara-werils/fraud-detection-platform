@@ -11,9 +11,8 @@ Implements:
 from __future__ import annotations
 
 import asyncio
-import json
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import structlog
@@ -178,7 +177,7 @@ class GDPRService:
         return {
             "subject": user_id,
             "org_id": org_id,
-            "exported_at": datetime.now(timezone.utc).isoformat(),
+            "exported_at": datetime.now(UTC).isoformat(),
             "data_categories": {
                 "transactions": [
                     {
@@ -214,7 +213,7 @@ class GDPRService:
         Should be scheduled via Airflow or cron daily.
         """
         purged: dict[str, int] = {}
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         async with get_db_session() as session:
             # Purge usage records (90 days)
@@ -243,10 +242,11 @@ class GDPRService:
 
 # ── GDPR API endpoints ─────────────────────────────────────────────────────────
 
-from fastapi import APIRouter, Depends, HTTPException, Request
-from pydantic import BaseModel
-from scoring.api.jwt_auth import CurrentUser, require_user
-from scoring.api.rbac import require_analyst
+from fastapi import APIRouter, Depends, Request  # noqa: E402
+from pydantic import BaseModel  # noqa: E402
+
+from scoring.api.jwt_auth import CurrentUser, require_user  # noqa: E402
+from scoring.api.rbac import require_analyst  # noqa: E402
 
 gdpr_router = APIRouter(prefix="/api/v1/gdpr", tags=["gdpr"])
 

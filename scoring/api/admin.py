@@ -12,7 +12,7 @@ Provides:
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -41,15 +41,15 @@ async def platform_stats(
     async with get_db_session() as session:
         org_count = await session.scalar(select(func.count(Organization.id)))
         active_org_count = await session.scalar(
-            select(func.count(Organization.id)).where(Organization.is_active == True)
+            select(func.count(Organization.id)).where(Organization.is_active)
         )
         user_count = await session.scalar(select(func.count(User.id)))
         active_user_count = await session.scalar(
-            select(func.count(User.id)).where(User.is_active == True)
+            select(func.count(User.id)).where(User.is_active)
         )
         txn_count = await session.scalar(select(func.count(TransactionRecord.id)))
         api_key_count = await session.scalar(
-            select(func.count(APIKey.id)).where(APIKey.is_active == True)
+            select(func.count(APIKey.id)).where(APIKey.is_active)
         )
 
     # Real-time system stats
@@ -57,11 +57,11 @@ async def platform_stats(
     batch_queue = getattr(request.app.state, "batch_queue", None)
     ws_hub = getattr(request.app.state, "ws_hub", None)
     redis_pool = getattr(request.app.state, "redis_pool", None)
-    usage_meter = getattr(request.app.state, "usage_meter", None)
+    _usage_meter = getattr(request.app.state, "usage_meter", None)
     feature_cache = getattr(request.app.state, "feature_cache", None)
 
     return {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "tenants": {
             "total": org_count or 0,
             "active": active_org_count or 0,
