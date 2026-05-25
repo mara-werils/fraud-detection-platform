@@ -23,6 +23,8 @@ from scoring.api.sanctions import router as sanctions_router
 from scoring.api.webhooks import router as webhooks_router
 from scoring.api.export import router as export_router
 from scoring.api.analytics import router as analytics_router
+from scoring.api.entity_lists import router as entity_lists_router
+from scoring.api.versioning import VersioningMiddleware
 from scoring.api.auth import register_api_key
 from scoring.config import ScoringConfig
 from scoring.consumer import create_consumer_handler
@@ -35,6 +37,19 @@ from scoring.services.sanctions_screener import SanctionsScreener
 from scoring.services.transaction_store import TransactionStore
 from scoring.services.webhook_manager import WebhookManager
 from scoring.services.analytics_engine import AnalyticsEngine
+from scoring.services.device_fingerprint import DeviceFingerprintService
+from scoring.services.ip_intelligence import IPIntelligenceService
+from scoring.services.graph_analysis import TransactionGraphAnalyzer
+from scoring.services.merchant_risk import MerchantRiskService
+from scoring.services.entity_lists import EntityListService
+from scoring.services.event_store import EventStore
+from scoring.services.shadow_mode import ShadowModeService
+from scoring.services.session_analyzer import SessionAnalyzer
+from scoring.services.alert_routing import AlertRoutingEngine
+from scoring.services.webhook_delivery import WebhookDeliveryService
+from scoring.services.currency_risk import CurrencyRiskService
+from scoring.services.explainability import ExplainabilityService
+from scoring.plugins.registry import PluginRegistry
 from shared.kafka_utils import KafkaConsumerWrapper, KafkaProducerWrapper
 from shared.logging import setup_logging
 from shared.metrics import create_metrics
@@ -144,6 +159,19 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.sanctions_screener = SanctionsScreener()
     app.state.webhook_manager = WebhookManager()
     app.state.analytics_engine = AnalyticsEngine()
+    app.state.device_fingerprint = DeviceFingerprintService()
+    app.state.ip_intelligence = IPIntelligenceService()
+    app.state.graph_analyzer = TransactionGraphAnalyzer()
+    app.state.merchant_risk = MerchantRiskService()
+    app.state.entity_lists = EntityListService()
+    app.state.event_store = EventStore()
+    app.state.shadow_mode = ShadowModeService()
+    app.state.session_analyzer = SessionAnalyzer()
+    app.state.alert_routing = AlertRoutingEngine()
+    app.state.webhook_delivery = WebhookDeliveryService()
+    app.state.currency_risk = CurrencyRiskService()
+    app.state.explainability = ExplainabilityService()
+    app.state.plugin_registry = PluginRegistry()
 
     await logger.ainfo(
         "scoring_service_started",
@@ -153,7 +181,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         services=[
             "transaction_store", "case_manager", "feedback_store",
             "drift_detector", "sanctions_screener", "webhook_manager",
-            "analytics_engine",
+            "analytics_engine", "device_fingerprint", "ip_intelligence",
+            "graph_analyzer", "merchant_risk", "entity_lists", "event_store",
+            "shadow_mode", "session_analyzer", "alert_routing",
+            "webhook_delivery", "currency_risk", "explainability",
+            "plugin_registry",
         ],
     )
 
@@ -191,7 +223,7 @@ def create_app() -> FastAPI:
             "Real-time ML-powered fraud detection platform with ensemble scoring, "
             "case management, drift detection, and analyst workflows."
         ),
-        version="0.2.0",
+        version="1.0.0",
         lifespan=lifespan,
     )
 
@@ -212,6 +244,10 @@ def create_app() -> FastAPI:
     app.include_router(webhooks_router)
     app.include_router(export_router)
     app.include_router(analytics_router)
+    app.include_router(entity_lists_router)
+
+    # API versioning middleware
+    app.add_middleware(VersioningMiddleware)
 
     return app
 
