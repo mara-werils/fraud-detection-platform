@@ -22,6 +22,7 @@ from scoring.api.explainability import router as explainability_router
 from scoring.api.sanctions import router as sanctions_router
 from scoring.api.webhooks import router as webhooks_router
 from scoring.api.export import router as export_router
+from scoring.api.analytics import router as analytics_router
 from scoring.api.auth import register_api_key
 from scoring.config import ScoringConfig
 from scoring.consumer import create_consumer_handler
@@ -33,6 +34,7 @@ from scoring.services.feedback_store import FeedbackStore
 from scoring.services.sanctions_screener import SanctionsScreener
 from scoring.services.transaction_store import TransactionStore
 from scoring.services.webhook_manager import WebhookManager
+from scoring.services.analytics_engine import AnalyticsEngine
 from shared.kafka_utils import KafkaConsumerWrapper, KafkaProducerWrapper
 from shared.logging import setup_logging
 from shared.metrics import create_metrics
@@ -141,6 +143,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.drift_detector = DriftDetector()
     app.state.sanctions_screener = SanctionsScreener()
     app.state.webhook_manager = WebhookManager()
+    app.state.analytics_engine = AnalyticsEngine()
 
     await logger.ainfo(
         "scoring_service_started",
@@ -150,6 +153,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         services=[
             "transaction_store", "case_manager", "feedback_store",
             "drift_detector", "sanctions_screener", "webhook_manager",
+            "analytics_engine",
         ],
     )
 
@@ -207,6 +211,7 @@ def create_app() -> FastAPI:
     app.include_router(sanctions_router)
     app.include_router(webhooks_router)
     app.include_router(export_router)
+    app.include_router(analytics_router)
 
     return app
 
