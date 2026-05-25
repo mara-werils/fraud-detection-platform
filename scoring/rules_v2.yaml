@@ -1,0 +1,416 @@
+# Fraud Detection Rules v2
+# Enhanced YAML rule configuration for the YAMLRulesEngine v2.
+# Supports nested AND/OR/NOT condition groups, additive and multiplicative
+# score methods, priority ordering, and tagging.
+#
+# Score method:
+#   additive       — score is added to the running total (default)
+#   multiplicative — score multiplies the running total as (1 + score)
+#
+# Combination method:
+#   sum            — sum all triggered additive scores (default)
+#   max            — take the highest single rule score
+#   weighted_avg   — weight-averaged across triggered rules
+
+name: fraud-detection-rules-v2
+version: "2.0.0"
+combination_method: sum
+default_score: 0.0
+
+rules:
+
+  # ---------------------------------------------------------------------------
+  # HIGH VALUE TRANSACTIONS
+  # ---------------------------------------------------------------------------
+
+  - id: HIGH_VALUE_001
+    name: extremely_high_absolute_amount
+    description: >
+      Transaction amount exceeds $10,000 — regulatory reporting threshold and
+      common card-not-present fraud ceiling.
+    priority: 90
+    score: 0.35
+    score_method: additive
+    enabled: true
+    tags: [high_value, amount]
+    condition_group:
+      combinator: AND
+      conditions:
+        - field: amount
+          operator: gte
+          value: 10000
+
+  - id: HIGH_VALUE_002
+    name: high_amount_relative_to_history
+    description: >
+      Amount is more than 5× the user's 24-hour average — indicates a
+      significant deviation from established spending behaviour.
+    priority: 85
+    score: 0.30
+    score_method: additive
+    enabled: true
+    tags: [high_value, amount, behavioral]
+    condition_group:
+      combinator: AND
+      conditions:
+        - field: amount_to_avg_ratio
+          operator: gt
+          value: 5.0
+
+  - id: HIGH_VALUE_003
+    name: high_zscore_amount
+    description: >
+      Amount z-score exceeds 3 standard deviations from the user's personal
+      distribution — statistically extreme spend.
+    priority: 80
+    score: 0.25
+    score_method: additive
+    enabled: true
+    tags: [high_value, amount, statistical]
+    condition_group:
+      combinator: AND
+      conditions:
+        - field: amount_zscore
+          operator: gt
+          value: 3.0
+
+  # ---------------------------------------------------------------------------
+  # VELOCITY CHECKS
+  # ---------------------------------------------------------------------------
+
+  - id: VELOCITY_001
+    name: high_transaction_velocity_1h
+    description: >
+      More than 10 transactions within 1 hour signals card-testing or
+      automated fraud.
+    priority: 88
+    score: 0.30
+    score_method: additive
+    enabled: true
+    tags: [velocity]
+    condition_group:
+      combinator: AND
+      conditions:
+        - field: txn_count_1h
+          operator: gt
+          value: 10
+
+  - id: VELOCITY_002
+    name: moderate_velocity_combined_with_high_amount
+    description: >
+      Moderate transaction velocity (>5 in 1h) combined with a spend ratio
+      above 2× the daily average suggests burst-spending fraud patterns.
+    priority: 75
+    score: 0.20
+    score_method: additive
+    enabled: true
+    tags: [velocity, amount]
+    condition_group:
+      combinator: AND
+      conditions:
+        - field: txn_count_1h
+          operator: gt
+          value: 5
+        - field: amount_to_avg_ratio
+          operator: gt
+          value: 2.0
+
+  - id: VELOCITY_003
+    name: high_unique_merchants_1h
+    description: >
+      More than 5 distinct merchants in 1 hour is characteristic of card
+      enumeration or credential-stuffing attacks.
+    priority: 70
+    score: 0.20
+    score_method: additive
+    enabled: true
+    tags: [velocity, merchant]
+    condition_group:
+      combinator: AND
+      conditions:
+        - field: unique_merchants_24h
+          operator: gt
+          value: 5
+
+  # ---------------------------------------------------------------------------
+  # GEOGRAPHIC ANOMALIES
+  # ---------------------------------------------------------------------------
+
+  - id: GEO_001
+    name: impossible_travel
+    description: >
+      Transaction originates more than 1,000 km from the last known location —
+      physically impossible without air travel between recent transactions.
+    priority: 92
+    score: 0.40
+    score_method: additive
+    enabled: true
+    tags: [geo, impossible_travel]
+    condition_group:
+      combinator: AND
+      conditions:
+        - field: distance_from_last_txn_km
+          operator: gt
+          value: 1000
+
+  - id: GEO_002
+    name: multi_country_activity
+    description: >
+      Transactions in more than 3 distinct countries within 24 hours — unless
+      the user has international travel flags on their profile.
+    priority: 82
+    score: 0.25
+    score_method: additive
+    enabled: true
+    tags: [geo, cross_border]
+    condition_group:
+      combinator: AND
+      conditions:
+        - field: unique_countries_24h
+          operator: gt
+          value: 3
+
+  - id: GEO_003
+    name: cross_border_high_value
+    description: >
+      Cross-border transaction (2+ countries in 24h) combined with an amount
+      exceeding twice the user's average — heightened risk for card-not-present
+      international fraud.
+    priority: 78
+    score: 0.25
+    score_method: additive
+    enabled: true
+    tags: [geo, cross_border, high_value]
+    condition_group:
+      combinator: AND
+      conditions:
+        - field: unique_countries_24h
+          operator: gte
+          value: 2
+        - field: amount_to_avg_ratio
+          operator: gt
+          value: 2.0
+
+  # ---------------------------------------------------------------------------
+  # TIME-BASED RISKS
+  # ---------------------------------------------------------------------------
+
+  - id: TIME_001
+    name: deep_night_high_value
+    description: >
+      High-value transaction (z-score > 2) between midnight and 5 AM local
+      time — low-legitimacy window with elevated fraud probability.
+    priority: 72
+    score: 0.20
+    score_method: additive
+    enabled: true
+    tags: [time, high_value]
+    condition_group:
+      combinator: AND
+      conditions:
+        - field: amount_zscore
+          operator: gt
+          value: 2.0
+        - field: hour_of_day
+          operator: between
+          value: [0, 5]
+
+  - id: TIME_002
+    name: rapid_successive_transactions
+    description: >
+      Less than 30 seconds between the current and previous transaction —
+      likely automated or bot-driven activity.
+    priority: 86
+    score: 0.25
+    score_method: additive
+    enabled: true
+    tags: [time, velocity]
+    condition_group:
+      combinator: AND
+      conditions:
+        - field: time_since_last_txn_seconds
+          operator: lte
+          value: 30
+
+  # ---------------------------------------------------------------------------
+  # DEVICE RISKS
+  # ---------------------------------------------------------------------------
+
+  - id: DEVICE_001
+    name: new_device_high_amount
+    description: >
+      High-value transaction (ratio > 3×) on a device that has never been seen
+      before — strong account-takeover signal.
+    priority: 90
+    score: 0.40
+    score_method: additive
+    enabled: true
+    tags: [device, high_value, ato]
+    condition_group:
+      combinator: AND
+      conditions:
+        - field: is_new_device
+          operator: eq
+          value: true
+        - field: amount_to_avg_ratio
+          operator: gt
+          value: 3.0
+
+  - id: DEVICE_002
+    name: new_device_new_merchant_combo
+    description: >
+      Both the device and the merchant are new to this user simultaneously —
+      high-risk combination typical of credential theft usage.
+    priority: 82
+    score: 0.30
+    score_method: additive
+    enabled: true
+    tags: [device, merchant, ato]
+    condition_group:
+      combinator: AND
+      conditions:
+        - field: is_new_device
+          operator: eq
+          value: true
+        - field: is_new_merchant
+          operator: eq
+          value: true
+
+  # ---------------------------------------------------------------------------
+  # MERCHANT CATEGORY RISKS
+  # ---------------------------------------------------------------------------
+
+  - id: MCC_001
+    name: high_risk_merchant_category
+    description: >
+      Transaction at a high-risk merchant category code — includes crypto
+      exchanges (6051), money services (6099), wire transfers (4829), and
+      gambling sites (7995).
+    priority: 76
+    score: 0.20
+    score_method: additive
+    enabled: true
+    tags: [merchant, mcc, high_risk]
+    condition_group:
+      combinator: AND
+      conditions:
+        - field: merchant_category
+          operator: in
+          value: ["6051", "6099", "4829", "7995", "5912"]
+
+  - id: MCC_002
+    name: new_merchant_elevated_amount
+    description: >
+      First transaction with a merchant combined with a z-score above 1.5 —
+      first-use exploitation risk.
+    priority: 65
+    score: 0.15
+    score_method: additive
+    enabled: true
+    tags: [merchant, behavioral]
+    condition_group:
+      combinator: AND
+      conditions:
+        - field: is_new_merchant
+          operator: eq
+          value: true
+        - field: amount_zscore
+          operator: gt
+          value: 1.5
+
+  # ---------------------------------------------------------------------------
+  # ROUND AMOUNT DETECTION
+  # ---------------------------------------------------------------------------
+
+  - id: ROUND_001
+    name: round_amount_high_value
+    description: >
+      Transactions at round hundreds (e.g. $1000, $2000) above $500 are a
+      classic fraud signal — fraudsters often use psychologically simple amounts.
+      Checks that (amount % 100) == 0.
+    priority: 55
+    score: 0.10
+    score_method: additive
+    enabled: true
+    tags: [amount, round_amount]
+    condition_group:
+      combinator: AND
+      conditions:
+        - field: amount
+          operator: gte
+          value: 500
+        - field: amount_is_round_hundred
+          operator: eq
+          value: true
+
+  # ---------------------------------------------------------------------------
+  # FIRST-TIME PATTERNS
+  # ---------------------------------------------------------------------------
+
+  - id: FIRST_TIME_001
+    name: first_transaction_high_value
+    description: >
+      The user's very first transaction is unusually high — fresh accounts
+      created for fraud often open with a large fraudulent charge.
+    priority: 88
+    score: 0.35
+    score_method: additive
+    enabled: true
+    tags: [first_time, high_value, account_age]
+    condition_group:
+      combinator: AND
+      conditions:
+        - field: txn_count_24h
+          operator: lte
+          value: 1
+        - field: amount
+          operator: gte
+          value: 1000
+
+  - id: FIRST_TIME_002
+    name: first_international_transaction_large
+    description: >
+      First ever international transaction (unique_countries_24h == 1 with a
+      cross_border flag) that is also high value — typical card-not-present
+      fraud targeting international merchants.
+    priority: 80
+    score: 0.25
+    score_method: additive
+    enabled: true
+    tags: [first_time, geo, cross_border, high_value]
+    condition_group:
+      combinator: AND
+      conditions:
+        - field: is_first_international
+          operator: eq
+          value: true
+        - field: amount_to_avg_ratio
+          operator: gt
+          value: 2.0
+
+  # ---------------------------------------------------------------------------
+  # COMPOSITE / MULTIPLICATIVE BOOSTER
+  # ---------------------------------------------------------------------------
+
+  - id: BOOST_001
+    name: multiple_risk_signals_booster
+    description: >
+      Multiplicative risk amplifier — applies when both a new device AND
+      impossible-travel distance (> 500 km) are present together. Boosts the
+      accumulated score by 20% to reflect the compounding nature of these
+      simultaneous signals.
+    priority: 95
+    score: 0.20
+    score_method: multiplicative
+    weight: 2.0
+    enabled: true
+    tags: [composite, device, geo, booster]
+    condition_group:
+      combinator: AND
+      conditions:
+        - field: is_new_device
+          operator: eq
+          value: true
+        - field: distance_from_last_txn_km
+          operator: gt
+          value: 500
