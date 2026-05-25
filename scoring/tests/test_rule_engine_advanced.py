@@ -106,9 +106,9 @@ class TestCustomThresholds:
         assert result.score == pytest.approx(0.35)
 
     def test_custom_night_window(self) -> None:
-        """A wider night window (22-06) should trigger at 23:00."""
-        engine = RuleEngine(night_start_hour=22, night_end_hour=6, night_score=0.2)
-        txn = _txn(hour=23)
+        """A shifted night window (20-23) should trigger at 21:00."""
+        engine = RuleEngine(night_start_hour=20, night_end_hour=23, night_score=0.2)
+        txn = _txn(hour=21)
         result = engine.rule_night_transaction(txn, _features())
         assert result.triggered is True
         assert result.score == pytest.approx(0.2)

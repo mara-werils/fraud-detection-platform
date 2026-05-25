@@ -402,16 +402,23 @@ class TestDriftReportEndpoint:
 
     def test_drift_report_with_enough_data(self, full_app: FastAPI, full_client: TestClient) -> None:
         """Once populated the endpoint returns a structured report."""
-        detector: DriftDetector = full_app.state.drift_detector
-        # Populate reference and current windows
+        # Replace with a small-window detector so thresholds are reachable in tests
+        small_detector = DriftDetector(
+            reference_window=100,
+            current_window=50,
+        )
+        full_app.state.drift_detector = small_detector
+
         import random
         random.seed(42)
-        for _ in range(150):
-            detector.add_sample(
+        # Fill reference window
+        for _ in range(110):
+            small_detector.add_sample(
                 {feat: random.random() for feat in DriftDetector.DEFAULT_FEATURES}
             )
+        # Fill current window
         for _ in range(60):
-            detector.add_sample(
+            small_detector.add_sample(
                 {feat: random.random() * 2 for feat in DriftDetector.DEFAULT_FEATURES}
             )
 
@@ -420,6 +427,9 @@ class TestDriftReportEndpoint:
         data = response.json()
         assert "overall_drift" in data
         assert "feature_metrics" in data
+
+        # Restore default
+        full_app.state.drift_detector = DriftDetector()
 
 
 # ---------------------------------------------------------------------------
