@@ -84,7 +84,10 @@ async def _check_scorer(app) -> ComponentStatus:
     scorer = getattr(app.state, "scorer", None)
     if scorer is None:
         return ComponentStatus(name="scorer", status="unhealthy", detail="not initialized")
-    return ComponentStatus(name="scorer", status="healthy", detail=getattr(scorer, "model_version", "unknown"))
+    model_version = getattr(scorer, "model_version", None)
+    if not model_version:
+        return ComponentStatus(name="scorer", status="degraded", detail="model version unavailable")
+    return ComponentStatus(name="scorer", status="healthy", detail=model_version)
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
