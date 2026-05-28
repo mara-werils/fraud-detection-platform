@@ -18,6 +18,14 @@ import structlog
 logger = structlog.get_logger(__name__)
 
 
+def _deserialize_cached_value(raw: Any) -> Any:
+    if isinstance(raw, bytes):
+        raw = raw.decode("utf-8")
+    if isinstance(raw, str):
+        return json.loads(raw)
+    return raw
+
+
 class LRUCache:
     """Thread-safe in-process LRU cache with TTL support."""
 
@@ -109,7 +117,7 @@ class TwoLevelFeatureCache:
         try:
             raw = await self._redis.get(key)
             if raw is not None:
-                value = json.loads(raw)
+                value = _deserialize_cached_value(raw)
                 # Promote to L1
                 self._l1.set(key, value)
                 self._l2_hits += 1
@@ -140,7 +148,7 @@ class TwoLevelFeatureCache:
                 values = await self._redis.mget(*l2_keys_needed)
                 for key, raw in zip(l2_keys_needed, values):
                     if raw is not None:
-                        v = json.loads(raw)
+                        v = _deserialize_cached_value(raw)
                         feature = feature_by_key[key]
                         result[feature] = v
                         self._l1.set(key, v)
