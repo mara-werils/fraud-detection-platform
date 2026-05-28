@@ -43,6 +43,9 @@ class LRUCache:
 
     def set(self, key: str, value: Any, ttl: int | None = None) -> None:
         effective_ttl = ttl or self._default_ttl
+        # Guard against accidental zero/negative TTL values that would make entries unusable.
+        if effective_ttl <= 0:
+            effective_ttl = 1
         expires_at = time.monotonic() + effective_ttl
         if key in self._cache:
             self._cache.move_to_end(key)
