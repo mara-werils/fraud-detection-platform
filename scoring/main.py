@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import time
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -68,6 +69,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     model, and all platform services on startup. Tears everything down
     gracefully on shutdown.
     """
+    startup_start = time.monotonic()
     config = ScoringConfig()
 
     setup_logging(
@@ -176,8 +178,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.explainability = ExplainabilityService()
     app.state.plugin_registry = PluginRegistry()
 
+    startup_elapsed = time.monotonic() - startup_start
+    app.state.startup_time_seconds = startup_elapsed
+
     await logger.ainfo(
         "scoring_service_started",
+        startup_time_seconds=round(startup_elapsed, 3),
         model_version=config.model_version,
         kafka="connected" if producer and consumer else "degraded",
         redis="connected" if redis else "degraded",
