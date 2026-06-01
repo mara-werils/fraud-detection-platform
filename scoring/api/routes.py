@@ -9,6 +9,7 @@ from fastapi import APIRouter, HTTPException, Request
 from prometheus_client import generate_latest
 from starlette.responses import Response
 
+from scoring.exceptions import FeatureRetrievalError, ModelNotLoadedError
 from shared.schemas import (
     FeatureVector,
     ScoredTransaction,
@@ -38,7 +39,7 @@ async def score_transaction(transaction: Transaction, request: Request) -> Score
     redis = request.app.state.redis
 
     if scorer is None:
-        raise HTTPException(status_code=503, detail="Model not loaded")
+        raise ModelNotLoadedError("Scoring model is not loaded")
 
     # Build a default feature vector; in production this would come from Redis
     features = FeatureVector(
@@ -57,11 +58,11 @@ async def score_transaction(transaction: Transaction, request: Request) -> Score
                 data["transaction_id"] = str(transaction.transaction_id)
                 data["user_id"] = str(transaction.user_id)
                 features = FeatureVector.model_validate(data)
-        except Exception:
-            await logger.aexception(
-                "feature_fetch_error_api",
-                user_id=str(transaction.user_id),
-            )
+        except Exception as exc:
+            raise FeatureRetrievalError(
+                f"Failed to fetch features for user {transaction.user_id}",
+                details={"user_id": str(transaction.user_id)},
+            ) from exc
 
     scored = await scorer.score(transaction, features)
 

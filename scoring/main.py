@@ -6,8 +6,10 @@ import asyncio
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
+import orjson
 import structlog
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from redis.asyncio import Redis
 
 from scoring.api.ab_testing import router as ab_router
@@ -27,6 +29,7 @@ from scoring.api.transactions import router as transactions_router
 from scoring.api.versioning import VersioningMiddleware
 from scoring.api.webhooks import router as webhooks_router
 from scoring.config import ScoringConfig
+from scoring.exceptions import ModelNotLoadedError, ScoringError
 from scoring.consumer import create_consumer_handler
 from scoring.models.ensemble import EnsembleScorer
 from scoring.models.rule_engine import RuleEngine
@@ -226,6 +229,17 @@ def create_app() -> FastAPI:
         version="1.0.0",
         lifespan=lifespan,
     )
+
+    @app.exception_handler(ModelNotLoadedError)
+    async def _model_not_loaded_handler(request: Request, exc: ModelNotLoadedError) -> JSONResponse:
+        return JSONResponse(status_code=503, content={"error": str(exc), "type": "model_not_loaded"})
+
+    @app.exception_handler(ScoringError)
+    async def _scoring_error_handler(request: Request, exc: ScoringError) -> JSONResponse:
+        return JSONResponse(
+            status_code=500,
+            content={"error": str(exc), "type": type(exc).__name__, "details": exc.details},
+        )
 
     setup_middleware(app)
 
