@@ -69,6 +69,10 @@ class ScoringConfig(BaseSettings):
     slo_p99_latency_ms: float = 200.0
     slo_error_rate_threshold: float = 0.001
 
+    # CORS
+    cors_allowed_origins: str = "*"
+    cors_allow_credentials: bool = True
+
     # Service
     service_name: str = "scoring-service"
     service_version: str = "0.2.0"
