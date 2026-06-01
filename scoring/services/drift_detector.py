@@ -6,6 +6,7 @@ to detect data drift and concept drift that could degrade model performance.
 
 from __future__ import annotations
 
+import bisect
 import math
 from collections import deque
 from dataclasses import dataclass, field
@@ -241,21 +242,19 @@ class DriftDetector:
         edges = [min_val + i * bin_width for i in range(bins + 1)]
         edges[-1] = max_val + 1e-10  # Include max value
 
-        # Compute proportions
+        # Compute proportions using bisect for O(n log bins) instead of O(n * bins)
         ref_counts = [0] * bins
         cur_counts = [0] * bins
 
         for v in reference:
-            for i in range(bins):
-                if edges[i] <= v < edges[i + 1]:
-                    ref_counts[i] += 1
-                    break
+            idx = bisect.bisect_right(edges, v) - 1
+            idx = max(0, min(idx, bins - 1))
+            ref_counts[idx] += 1
 
         for v in current:
-            for i in range(bins):
-                if edges[i] <= v < edges[i + 1]:
-                    cur_counts[i] += 1
-                    break
+            idx = bisect.bisect_right(edges, v) - 1
+            idx = max(0, min(idx, bins - 1))
+            cur_counts[idx] += 1
 
         ref_total = sum(ref_counts) or 1
         cur_total = sum(cur_counts) or 1
