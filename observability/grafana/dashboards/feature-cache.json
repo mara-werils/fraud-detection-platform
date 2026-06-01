@@ -1,0 +1,131 @@
+{
+  "dashboard": {
+    "title": "Feature Cache Performance",
+    "uid": "feature-cache",
+    "tags": ["fraud-detection", "cache", "performance"],
+    "timezone": "utc",
+    "refresh": "10s",
+    "panels": [
+      {
+        "title": "L1 Cache Hit Rate",
+        "type": "gauge",
+        "gridPos": {"h": 6, "w": 6, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "rate(feature_cache_operations_total{level='l1',result='hit'}[5m]) / rate(feature_cache_operations_total{level='l1'}[5m])",
+            "legendFormat": "L1 Hit Rate"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 0.5},
+                {"color": "green", "value": 0.8}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "title": "L2 Cache Hit Rate",
+        "type": "gauge",
+        "gridPos": {"h": 6, "w": 6, "x": 6, "y": 0},
+        "targets": [
+          {
+            "expr": "rate(feature_cache_operations_total{level='l2',result='hit'}[5m]) / rate(feature_cache_operations_total{level='l2'}[5m])",
+            "legendFormat": "L2 Hit Rate"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 0.3},
+                {"color": "green", "value": 0.6}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "title": "L2 Redis Latency (p50 / p95 / p99)",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(feature_cache_latency_seconds_bucket{level='l2'}[5m]))",
+            "legendFormat": "p50"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(feature_cache_latency_seconds_bucket{level='l2'}[5m]))",
+            "legendFormat": "p95"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(feature_cache_latency_seconds_bucket{level='l2'}[5m]))",
+            "legendFormat": "p99"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {"unit": "s"}
+        }
+      },
+      {
+        "title": "Cache Operations Rate",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "rate(feature_cache_operations_total{level='l1',result='hit'}[5m])",
+            "legendFormat": "L1 Hit"
+          },
+          {
+            "expr": "rate(feature_cache_operations_total{level='l1',result='miss'}[5m])",
+            "legendFormat": "L1 Miss"
+          },
+          {
+            "expr": "rate(feature_cache_operations_total{level='l2',result='hit'}[5m])",
+            "legendFormat": "L2 Hit"
+          },
+          {
+            "expr": "rate(feature_cache_operations_total{level='l2',result='miss'}[5m])",
+            "legendFormat": "L2 Miss"
+          },
+          {
+            "expr": "rate(feature_cache_operations_total{level='l2',result='error'}[5m])",
+            "legendFormat": "L2 Error"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {"unit": "ops"}
+        }
+      },
+      {
+        "title": "Cache Errors",
+        "type": "stat",
+        "gridPos": {"h": 6, "w": 6, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "increase(feature_cache_operations_total{result='error'}[1h])",
+            "legendFormat": "Errors (1h)"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 10},
+                {"color": "red", "value": 100}
+              ]
+            }
+          }
+        }
+      }
+    ]
+  }
+}
