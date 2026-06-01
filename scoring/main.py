@@ -232,7 +232,7 @@ def create_app() -> FastAPI:
             "Real-time ML-powered fraud detection platform with ensemble scoring, "
             "case management, drift detection, and analyst workflows."
         ),
-        version="1.0.0",
+        version="1.1.0",
         lifespan=lifespan,
     )
 

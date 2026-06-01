@@ -82,7 +82,7 @@ class ScoringConfig(BaseSettings):
 
     # Service
     service_name: str = "scoring-service"
-    service_version: str = "0.2.0"
+    service_version: str = "1.1.0"
 
     @field_validator("score_threshold_block")
     @classmethod
