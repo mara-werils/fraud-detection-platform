@@ -299,6 +299,40 @@ class CaseManager:
         total = len(candidates)
         return candidates[offset : offset + limit], total
 
+    def bulk_update_status(
+        self,
+        case_ids: list[str],
+        status: str,
+        actor: str = "system",
+    ) -> tuple[int, int]:
+        """Update status for multiple cases at once.
+
+        Args:
+            case_ids: List of case IDs to update.
+            status: New status value for all cases.
+            actor: Who is making the change.
+
+        Returns:
+            Tuple of (success_count, not_found_count).
+        """
+        success = 0
+        not_found = 0
+        for case_id in case_ids:
+            result = self.update_status(case_id, status, actor)
+            if result is not None:
+                success += 1
+            else:
+                not_found += 1
+        logger.info(
+            "bulk_status_update",
+            total=len(case_ids),
+            success=success,
+            not_found=not_found,
+            status=status,
+            actor=actor,
+        )
+        return success, not_found
+
     def stats(self) -> dict[str, Any]:
         """Return case statistics."""
         with self._lock:
