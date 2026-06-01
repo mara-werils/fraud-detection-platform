@@ -489,6 +489,32 @@ class WebhookDeliveryService:
             hashlib.sha256,
         ).hexdigest()
 
+    @staticmethod
+    def verify_signature(body: bytes, secret: str, signature_header: str) -> bool:
+        """Verify an incoming webhook signature against the expected HMAC.
+
+        Use this on the receiving end to validate that a webhook payload
+        was signed by a party that knows the shared secret.
+
+        Args:
+            body: Raw request body bytes.
+            secret: Shared signing secret.
+            signature_header: Value of the X-Webhook-Signature header
+                (expected format: ``sha256=<hex>``).
+
+        Returns:
+            True if the signature is valid.
+        """
+        if not signature_header.startswith("sha256="):
+            return False
+        expected = hmac.new(
+            secret.encode("utf-8"),
+            body,
+            hashlib.sha256,
+        ).hexdigest()
+        received = signature_header.removeprefix("sha256=")
+        return hmac.compare_digest(expected, received)
+
     def _enqueue_dead_letter(self, payload: WebhookPayload) -> None:
         """Add a payload to the dead-letter queue and update metrics."""
         self._dlq.append(payload)
