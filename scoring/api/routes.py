@@ -180,6 +180,11 @@ async def model_info(request: Request) -> dict[str, Any]:
         "flag_rate": (
             scorer.total_flagged / scorer.total_scored if scorer.total_scored > 0 else 0.0
         ),
+        "latency": {
+            "avg_ms": round(scorer.avg_latency_ms, 2),
+            "max_ms": round(scorer.max_latency_ms, 2),
+            "sla_breach_rate": round(scorer.sla_breach_rate, 6),
+        },
     }
 
 
