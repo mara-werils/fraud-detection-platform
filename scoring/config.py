@@ -73,6 +73,10 @@ class ScoringConfig(BaseSettings):
     cors_allowed_origins: str = "*"
     cors_allow_credentials: bool = True
 
+    # Rate limiting
+    rate_limit_requests_per_minute: int = 600
+    rate_limit_burst_size: int = 100
+
     # Graceful shutdown
     shutdown_timeout_seconds: int = 30
 
