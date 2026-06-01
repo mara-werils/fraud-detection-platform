@@ -219,6 +219,23 @@ class TwoLevelFeatureCache:
         except Exception as exc:
             await logger.awarning("feature_cache_invalidate_error", error=str(exc))
 
+    async def warm(self, user_ids: list[str], features: list[str]) -> int:
+        """Pre-load features for a set of users into L1 from L2.
+
+        Args:
+            user_ids: Users to warm the cache for.
+            features: Feature names to load.
+
+        Returns:
+            Number of features successfully warmed into L1.
+        """
+        warmed = 0
+        for user_id in user_ids:
+            loaded = await self.get_many(user_id, features)
+            warmed += len(loaded)
+        logger.info("feature_cache_warmed", users=len(user_ids), features_loaded=warmed)
+        return warmed
+
     def stats(self) -> dict:
         l1_stats = self._l1.stats()
         l2_total = self._l2_hits + self._l2_misses
