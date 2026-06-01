@@ -661,6 +661,19 @@ class AlertRoutingEngine:
             "escalation_levels": len(self._escalation_policy.levels),
         }
 
+    def maintenance(self) -> dict[str, int]:
+        """Run periodic maintenance tasks (suppression eviction).
+
+        Call this from a background timer to prevent unbounded memory growth.
+
+        Returns:
+            Dict with counts of cleaned-up entries.
+        """
+        evicted = self._suppression.evict_expired()
+        if evicted:
+            logger.info("alert_routing_maintenance", suppression_evicted=evicted)
+        return {"suppression_evicted": evicted}
+
     # ── YAML persistence ──────────────────────────────────────────────────────
 
     def load_rules_from_yaml(self, path: str) -> int:
