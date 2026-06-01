@@ -1,0 +1,64 @@
+groups:
+  - name: scoring_service
+    rules:
+      - alert: ScoringHighLatency
+        expr: histogram_quantile(0.99, rate(scoring_http_request_latency_seconds_bucket{path="/score"}[5m])) > 0.2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Scoring p99 latency above 200ms SLA"
+          description: "p99 latency is {{ $value | humanizeDuration }} over the last 5 minutes."
+
+      - alert: ScoringErrorRate
+        expr: rate(scoring_http_request_latency_seconds_count{status_code=~"5.."}[5m]) / rate(scoring_http_request_latency_seconds_count[5m]) > 0.001
+        for: 3m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Scoring error rate exceeds 0.1%"
+          description: "5xx error rate is {{ $value | humanizePercentage }}."
+
+      - alert: ModelDriftDetected
+        expr: increase(alerts_routed_total{priority="P1_CRITICAL"}[1h]) > 10
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Spike in P1 critical alerts may indicate model drift"
+
+      - alert: KafkaConsumerLag
+        expr: kafka_consumer_lag_seconds > 60
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Kafka consumer lag exceeds 60 seconds"
+          description: "Consumer group is falling behind on topic processing."
+
+      - alert: RedisConnectionDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis is unreachable"
+          description: "Feature cache L2 is unavailable, scoring may degrade."
+
+      - alert: HighFlagRate
+        expr: rate(alerts_routed_total[10m]) > 50
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Unusually high fraud flag rate"
+          description: "More than 50 alerts/min routed — possible attack or model issue."
+
+      - alert: FeatureCacheHitRateLow
+        expr: rate(feature_cache_operations_total{level="l1",result="hit"}[5m]) / rate(feature_cache_operations_total{level="l1"}[5m]) < 0.5
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "L1 feature cache hit rate below 50%"
+          description: "Low cache hit rate may indicate cold start or size misconfiguration."
