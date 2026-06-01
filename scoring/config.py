@@ -73,6 +73,9 @@ class ScoringConfig(BaseSettings):
     cors_allowed_origins: str = "*"
     cors_allow_credentials: bool = True
 
+    # Graceful shutdown
+    shutdown_timeout_seconds: int = 30
+
     # Service
     service_name: str = "scoring-service"
     service_version: str = "0.2.0"
