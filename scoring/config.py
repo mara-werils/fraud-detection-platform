@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -71,3 +72,32 @@ class ScoringConfig(BaseSettings):
     # Service
     service_name: str = "scoring-service"
     service_version: str = "0.2.0"
+
+    @field_validator("score_threshold_block")
+    @classmethod
+    def validate_block_threshold(cls, v: float) -> float:
+        if not 0.0 < v <= 1.0:
+            raise ValueError("score_threshold_block must be in (0, 1]")
+        return v
+
+    @field_validator("score_threshold_review")
+    @classmethod
+    def validate_review_threshold(cls, v: float) -> float:
+        if not 0.0 < v <= 1.0:
+            raise ValueError("score_threshold_review must be in (0, 1]")
+        return v
+
+    @field_validator("log_level")
+    @classmethod
+    def validate_log_level(cls, v: str) -> str:
+        allowed = {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
+        if v.upper() not in allowed:
+            raise ValueError(f"log_level must be one of {allowed}")
+        return v.upper()
+
+    @field_validator("redis_max_connections")
+    @classmethod
+    def validate_redis_pool(cls, v: int) -> int:
+        if v < 1:
+            raise ValueError("redis_max_connections must be >= 1")
+        return v
