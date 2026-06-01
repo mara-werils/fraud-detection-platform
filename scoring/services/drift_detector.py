@@ -210,6 +210,22 @@ class DriftDetector:
         """Return recent drift reports."""
         return list(self._reports)[-limit:]
 
+    def summary(self) -> dict[str, Any]:
+        """Return a high-level summary of drift detection state."""
+        latest = self.get_latest_report()
+        return {
+            "samples_added": self._samples_added,
+            "reports_generated": len(self._reports),
+            "latest_drift_detected": latest.overall_drift if latest else None,
+            "latest_alert_features": latest.alert_features if latest else [],
+            "latest_score_psi": round(latest.score_psi, 6) if latest else None,
+            "monitored_features": self._features,
+            "thresholds": {
+                "psi": self._psi_threshold,
+                "ks": self._ks_threshold,
+            },
+        }
+
     @staticmethod
     def _compute_psi(reference: list[float], current: list[float], bins: int = 10) -> float:
         """Compute Population Stability Index (PSI).
