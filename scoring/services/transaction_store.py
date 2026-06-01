@@ -7,7 +7,7 @@ The in-memory store is suitable for development and demonstration.
 from __future__ import annotations
 
 from collections import defaultdict
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 from threading import Lock
 from typing import Any
 
@@ -158,10 +158,32 @@ class TransactionStore:
             flagged = [t for t in reversed(self._transactions) if t.is_flagged]
         return flagged[:limit]
 
+    def evict_older_than(self, max_age: timedelta) -> int:
+        """Remove transactions older than the given age.
+
+        Args:
+            max_age: Maximum age for retained transactions.
+
+        Returns:
+            Number of evicted transactions.
+        """
+        cutoff = datetime.now(UTC) - max_age
+        with self._lock:
+            before = len(self._transactions)
+            self._transactions = [t for t in self._transactions if t.scored_at >= cutoff]
+            evicted = before - len(self._transactions)
+            if evicted > 0:
+                self._rebuild_indexes()
+                logger.info("transaction_store_retention_evicted", evicted=evicted, cutoff=cutoff.isoformat())
+            return evicted
+
     def _evict_oldest(self, count: int) -> None:
         """Remove the oldest N transactions."""
         self._transactions = self._transactions[count:]
-        # Rebuild indexes
+        self._rebuild_indexes()
+
+    def _rebuild_indexes(self) -> None:
+        """Rebuild user and transaction ID indexes after eviction."""
         self._by_user.clear()
         self._by_txn_id.clear()
         for i, txn in enumerate(self._transactions):
