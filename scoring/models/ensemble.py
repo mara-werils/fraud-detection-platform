@@ -111,6 +111,10 @@ class EnsembleScorer(BaseScorer):
         self._model_type = "ensemble"
         self._total_scored: int = 0
         self._total_flagged: int = 0
+        self._latency_sum_ms: float = 0.0
+        self._latency_max_ms: float = 0.0
+        self._sla_breaches: int = 0
+        self._sla_latency_ms: float = 200.0  # p99 SLA target
 
     # ------------------------------------------------------------------
     # Properties
@@ -131,6 +135,18 @@ class EnsembleScorer(BaseScorer):
     @property
     def total_flagged(self) -> int:
         return self._total_flagged
+
+    @property
+    def avg_latency_ms(self) -> float:
+        return self._latency_sum_ms / self._total_scored if self._total_scored else 0.0
+
+    @property
+    def max_latency_ms(self) -> float:
+        return self._latency_max_ms
+
+    @property
+    def sla_breach_rate(self) -> float:
+        return self._sla_breaches / self._total_scored if self._total_scored else 0.0
 
     # ------------------------------------------------------------------
     # Scoring
@@ -211,6 +227,10 @@ class EnsembleScorer(BaseScorer):
             flag_reason = " | ".join(reason_parts)
 
         self._total_scored += 1
+        self._latency_sum_ms += elapsed_ms
+        self._latency_max_ms = max(self._latency_max_ms, elapsed_ms)
+        if elapsed_ms > self._sla_latency_ms:
+            self._sla_breaches += 1
         if is_flagged:
             self._total_flagged += 1
 
