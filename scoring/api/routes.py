@@ -132,6 +132,16 @@ async def health_check(request: Request) -> dict[str, Any]:
     )
 
 
+@router.get("/health/live")
+async def liveness_probe() -> dict[str, bool]:
+    """Liveness probe for Kubernetes.
+
+    Always returns 200 — indicates the process is running and not deadlocked.
+    Kubernetes uses this to decide whether to restart the pod.
+    """
+    return {"alive": True}
+
+
 @router.get("/health/ready")
 async def readiness_probe(request: Request) -> dict[str, Any]:
     """Readiness probe for Kubernetes.
