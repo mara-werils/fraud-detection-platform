@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import secrets
-from datetime import datetime
+from datetime import UTC, datetime
 
 import structlog
 from fastapi import HTTPException, Request, Security
@@ -33,7 +33,7 @@ class APIKeyRecord:
     ) -> None:
         self.key_hash = key_hash
         self.name = name
-        self.created_at = created_at or datetime.utcnow()
+        self.created_at = created_at or datetime.now(UTC)
         self.rate_limit = rate_limit
         self.scopes = scopes or ["score", "read"]
 

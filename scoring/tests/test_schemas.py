@@ -7,7 +7,7 @@ rejection of invalid data.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from uuid import UUID, uuid4
 
@@ -285,7 +285,7 @@ class TestScoredTransactionSerialization:
             amount=Decimal("10.00"),
             currency="USD",
             transaction_type=TransactionType.PURCHASE,
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(UTC),
             fraud_score=0.5,
             model_version="ensemble-v1",
             scoring_latency_ms=5.0,

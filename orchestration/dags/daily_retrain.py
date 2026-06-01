@@ -41,7 +41,7 @@ def export_training_data(**context: object) -> str:
 
     ch = Client.from_url("clickhouse://default:clickhouse@clickhouse:8123/fraud")
 
-    end_date = datetime.utcnow()
+    end_date = datetime.now(UTC)
     start_date = end_date - timedelta(days=_TRAINING_DAYS)
 
     query = """

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import csv
 import io
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 import structlog
@@ -73,7 +73,7 @@ async def export_cases(request: Request, format: str = Query("csv")) -> Any:
     else:
         return {
             "total": total,
-            "exported_at": datetime.utcnow().isoformat(),
+            "exported_at": datetime.now(UTC).isoformat(),
             "cases": [c.model_dump(mode="json") for c in cases],
         }
 
@@ -111,7 +111,7 @@ async def export_feedback(request: Request, format: str = Query("csv")) -> Any:
     else:
         return {
             "total": total,
-            "exported_at": datetime.utcnow().isoformat(),
+            "exported_at": datetime.now(UTC).isoformat(),
             "data": [e.model_dump(mode="json") for e in entries],
         }
 
@@ -170,7 +170,7 @@ def _generate_csv_response(
         writer.writerow(row)
 
     output.seek(0)
-    timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
     return StreamingResponse(
         iter([output.getvalue()]),
         media_type="text/csv",
@@ -211,7 +211,7 @@ def _generate_json_response(
     return {
         "total": total,
         "exported": len(data),
-        "exported_at": datetime.utcnow().isoformat(),
+        "exported_at": datetime.now(UTC).isoformat(),
         "data": data,
     }
 

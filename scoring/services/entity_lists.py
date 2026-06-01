@@ -8,7 +8,7 @@ blocklist, allowlist, and watchlist entries across multiple entity types
 from __future__ import annotations
 
 from collections import defaultdict
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import StrEnum
 from threading import Lock
 from typing import Any
@@ -82,7 +82,7 @@ class EntityEntry(BaseModel):
     list_type: ListType
     reason: str = Field(..., min_length=1, description="Human-readable reason for listing")
     added_by: str = Field(..., description="User or system that added the entry")
-    added_at: datetime = Field(default_factory=datetime.utcnow)
+    added_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     expires_at: datetime | None = Field(None, description="Optional expiry; None = permanent")
     metadata: dict[str, Any] = Field(default_factory=dict)
 
@@ -90,7 +90,7 @@ class EntityEntry(BaseModel):
         """Return True if this entry has passed its expiry timestamp."""
         if self.expires_at is None:
             return False
-        return datetime.utcnow() > self.expires_at
+        return datetime.now(UTC) > self.expires_at
 
     def is_active(self) -> bool:
         """Return True when the entry is not expired."""

@@ -7,7 +7,7 @@ training data for model retraining and performance monitoring.
 from __future__ import annotations
 
 from collections import defaultdict
-from datetime import datetime
+from datetime import UTC, datetime
 from threading import Lock
 from typing import Any
 from uuid import uuid4
@@ -28,7 +28,7 @@ class FeedbackEntry(BaseModel):
     notes: str | None = None
     original_score: float | None = None
     original_decision: str | None = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class FeedbackStats(BaseModel):

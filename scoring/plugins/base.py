@@ -98,7 +98,7 @@ class PluginScore(BaseModel):
     )
     plugin_name: str = Field(default="", description="Populated by registry")
     plugin_version: str = Field(default="", description="Populated by registry")
-    scored_at: datetime = Field(default_factory=datetime.utcnow)
+    scored_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     transaction_id: UUID | None = Field(default=None, description="Correlated transaction")
 
     @field_validator("metadata", mode="before")

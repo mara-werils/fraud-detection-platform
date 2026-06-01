@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import hmac
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import StrEnum
 from threading import Lock
 from typing import Any
@@ -41,7 +41,7 @@ class WebhookConfig(BaseModel):
     events: list[str] = Field(default_factory=lambda: ["transaction.flagged"])
     status: WebhookStatus = WebhookStatus.ACTIVE
     description: str = ""
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     last_triggered: datetime | None = None
     success_count: int = 0
     failure_count: int = 0
@@ -57,7 +57,7 @@ class WebhookDelivery(BaseModel):
     status_code: int | None = None
     success: bool = False
     error: str | None = None
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class WebhookManager:
@@ -202,7 +202,7 @@ class WebhookManager:
 
         body = orjson.dumps({
             "event": event,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "data": payload,
         })
 
@@ -240,7 +240,7 @@ class WebhookManager:
                     webhook.failure_count += 1
                     webhook.consecutive_failures += 1
 
-                webhook.last_triggered = datetime.utcnow()
+                webhook.last_triggered = datetime.now(UTC)
 
                 # Auto-pause after too many failures
                 if webhook.consecutive_failures >= self._max_failures:

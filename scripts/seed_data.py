@@ -10,7 +10,7 @@ from __future__ import annotations
 import argparse
 import random
 import sys
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from uuid import UUID, uuid4
 
@@ -90,7 +90,7 @@ def generate_transactions(
 ) -> list[dict]:
     """Generate n sample transactions with realistic distributions."""
     rows = []
-    base_time = datetime.utcnow() - timedelta(days=90)
+    base_time = datetime.now(UTC) - timedelta(days=90)
 
     for _ in range(n):
         user_id = random.choice(user_ids)
@@ -163,7 +163,7 @@ def generate_transactions(
 def generate_user_profiles(user_ids: list[UUID]) -> list[dict]:
     """Generate user profile rows."""
     rows = []
-    now = datetime.utcnow()
+    now = datetime.now(UTC)
 
     for uid in user_ids:
         total_txn = random.randint(10, 5000)
@@ -195,7 +195,7 @@ def generate_user_profiles(user_ids: list[UUID]) -> list[dict]:
 def generate_merchant_profiles(merchant_ids: list[UUID]) -> list[dict]:
     """Generate merchant profile rows."""
     rows = []
-    now = datetime.utcnow()
+    now = datetime.now(UTC)
 
     for i, mid in enumerate(merchant_ids):
         name = MERCHANT_NAMES[i % len(MERCHANT_NAMES)] + f" #{random.randint(1000, 9999)}"

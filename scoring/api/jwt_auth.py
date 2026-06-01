@@ -186,7 +186,7 @@ async def register(body: RegisterRequest):
         role=user.role,
         org_id=str(user.org_id),
         is_active=user.is_active,
-        created_at=user.created_at or datetime.utcnow(),
+        created_at=user.created_at or datetime.now(UTC),
     )
 
 
@@ -275,5 +275,5 @@ async def me(current_user: CurrentUser = Depends(require_user)):
         role=user.role,
         org_id=str(user.org_id),
         is_active=user.is_active,
-        created_at=user.created_at or datetime.utcnow(),
+        created_at=user.created_at or datetime.now(UTC),
     )

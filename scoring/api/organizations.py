@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 
 import structlog
 from fastapi import APIRouter, HTTPException, Request
@@ -95,7 +95,7 @@ async def create_organization(body: OrganizationCreate, request: Request):
         is_active=org.is_active,
         rate_limit_rps=org.rate_limit_rps,
         monthly_quota=org.monthly_quota,
-        created_at=org.created_at or datetime.utcnow(),
+        created_at=org.created_at or datetime.now(UTC),
     )
 
 
@@ -115,7 +115,7 @@ async def get_organization(org_id: str, request: Request):
         is_active=org.is_active,
         rate_limit_rps=org.rate_limit_rps,
         monthly_quota=org.monthly_quota,
-        created_at=org.created_at or datetime.utcnow(),
+        created_at=org.created_at or datetime.now(UTC),
     )
 
 
@@ -150,7 +150,7 @@ async def update_organization(org_id: str, body: OrganizationUpdate, request: Re
         is_active=org.is_active,
         rate_limit_rps=org.rate_limit_rps,
         monthly_quota=org.monthly_quota,
-        created_at=org.created_at or datetime.utcnow(),
+        created_at=org.created_at or datetime.now(UTC),
     )
 
 
@@ -173,7 +173,7 @@ async def list_organizations(request: Request, limit: int = 50, offset: int = 0)
                 is_active=o.is_active,
                 rate_limit_rps=o.rate_limit_rps,
                 monthly_quota=o.monthly_quota,
-                created_at=o.created_at or datetime.utcnow(),
+                created_at=o.created_at or datetime.now(UTC),
             )
             for o in orgs
         ],

@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import random
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Final
 from uuid import UUID, uuid4
@@ -177,7 +177,7 @@ class UserProfile:
     card_type: str
     currency: str
     ip_prefix: str  # first 3 octets
-    last_txn_time: datetime = field(default_factory=datetime.utcnow)
+    last_txn_time: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     def home_lat(self) -> float:
         return self.home_city[0]
@@ -304,7 +304,7 @@ def generate_legitimate_transaction(user: UserProfile) -> Transaction:
 
     ip_address = f"{user.ip_prefix}.{random.randint(1, 254)}"
 
-    now = datetime.utcnow()
+    now = datetime.now(UTC)
     user.last_txn_time = now
 
     return Transaction(

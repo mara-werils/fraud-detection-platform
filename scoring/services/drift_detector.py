@@ -9,7 +9,7 @@ from __future__ import annotations
 import math
 from collections import deque
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from threading import Lock
 from typing import Any
 
@@ -26,7 +26,7 @@ class DriftMetric:
     psi: float
     ks_statistic: float
     drift_detected: bool
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
 @dataclass
@@ -180,7 +180,7 @@ class DriftDetector:
             overall_drift = len(alert_features) > 0
 
             report = DriftReport(
-                timestamp=datetime.utcnow(),
+                timestamp=datetime.now(UTC),
                 overall_drift=overall_drift,
                 score_psi=score_psi,
                 score_ks=score_ks,

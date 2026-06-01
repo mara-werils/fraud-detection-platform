@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
 
@@ -47,7 +47,7 @@ class ScreeningResult:
     """Result of a screening check."""
 
     query: str
-    screened_at: datetime = field(default_factory=datetime.utcnow)
+    screened_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     is_match: bool = False
     matches: list[ScreeningMatch] = field(default_factory=list)
     lists_checked: list[str] = field(default_factory=list)

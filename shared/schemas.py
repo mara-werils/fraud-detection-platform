@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from enum import StrEnum
 from typing import Any
@@ -74,7 +74,7 @@ class Transaction(BaseSchema):
     device_id: str | None = Field(default=None, description="Device fingerprint")
     latitude: float | None = Field(default=None, ge=-90, le=90)
     longitude: float | None = Field(default=None, ge=-180, le=180)
-    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Transaction time")
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC), description="Transaction time")
     metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
 
@@ -83,7 +83,7 @@ class FeatureVector(BaseSchema):
 
     transaction_id: UUID = Field(..., description="Associated transaction ID")
     user_id: UUID = Field(..., description="User ID")
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     # Velocity features
     txn_count_1h: int = Field(default=0, description="Transaction count in last 1 hour")
@@ -121,7 +121,7 @@ class ScoredTransaction(BaseSchema):
     fraud_score: float = Field(..., ge=0.0, le=1.0, description="Fraud probability score")
     model_version: str = Field(..., description="Model version used for scoring")
     scoring_latency_ms: float = Field(..., ge=0, description="Scoring latency in milliseconds")
-    scored_at: datetime = Field(default_factory=datetime.utcnow, description="Scoring timestamp")
+    scored_at: datetime = Field(default_factory=lambda: datetime.now(UTC), description="Scoring timestamp")
 
     features: FeatureVector | None = Field(default=None, description="Features used for scoring")
     is_flagged: bool = Field(default=False, description="Whether the transaction is flagged")
@@ -140,7 +140,7 @@ class AlertEvent(BaseSchema):
     reason: str = Field(..., description="Reason for the alert")
     amount: Decimal = Field(..., description="Transaction amount")
     currency: str = Field(default="USD", max_length=3)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     assigned_to: str | None = Field(default=None, description="Assigned analyst")
     notes: list[str] = Field(default_factory=list, description="Investigation notes")

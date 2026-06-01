@@ -20,7 +20,7 @@ from __future__ import annotations
 import asyncio
 import threading
 import time
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 import structlog
@@ -98,7 +98,7 @@ class _PluginEntry:
         self.plugin = plugin
         self.enabled: bool = True
         self.config: dict[str, Any] = dict(config)
-        self.loaded_at: datetime = datetime.utcnow()
+        self.loaded_at: datetime = datetime.now(UTC)
         self.module_path: str = module_path
         self.last_health: bool = True
 

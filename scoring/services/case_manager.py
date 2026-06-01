@@ -7,7 +7,7 @@ assignment, audit trails, and priority management.
 from __future__ import annotations
 
 from collections import defaultdict
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import StrEnum
 from threading import Lock
 from typing import Any
@@ -41,7 +41,7 @@ class CaseNote(BaseModel):
     note_id: str = Field(default_factory=lambda: str(uuid4()))
     author: str
     content: str
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class CaseEvent(BaseModel):
@@ -50,7 +50,7 @@ class CaseEvent(BaseModel):
     event_type: str
     actor: str
     details: str
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class FraudCase(BaseModel):
@@ -65,8 +65,8 @@ class FraudCase(BaseModel):
     status: CaseStatus = CaseStatus.OPEN
     priority: CasePriority = CasePriority.MEDIUM
     assigned_to: str | None = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     resolved_at: datetime | None = None
     notes: list[CaseNote] = Field(default_factory=list)
     events: list[CaseEvent] = Field(default_factory=list)
@@ -200,11 +200,11 @@ class CaseManager:
                 self._by_status[old_status].remove(case_id)
 
             case.status = CaseStatus(status)
-            case.updated_at = datetime.utcnow()
+            case.updated_at = datetime.now(UTC)
 
             # Track resolution time
             if status in ("resolved_fraud", "resolved_legitimate", "closed"):
-                case.resolved_at = datetime.utcnow()
+                case.resolved_at = datetime.now(UTC)
                 if status == "resolved_fraud":
                     case.is_fraud = True
                 elif status == "resolved_legitimate":
@@ -242,7 +242,7 @@ class CaseManager:
 
             old_assignee = case.assigned_to
             case.assigned_to = analyst
-            case.updated_at = datetime.utcnow()
+            case.updated_at = datetime.now(UTC)
 
             case.events.append(CaseEvent(
                 event_type="assigned",
@@ -260,7 +260,7 @@ class CaseManager:
                 return None
 
             case.notes.append(CaseNote(author=author, content=content))
-            case.updated_at = datetime.utcnow()
+            case.updated_at = datetime.now(UTC)
             return case
 
     def list_cases(

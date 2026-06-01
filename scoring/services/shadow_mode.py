@@ -12,7 +12,7 @@ import random
 import time
 from collections import deque
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from threading import Lock
 from typing import Any
@@ -209,7 +209,7 @@ class CanaryEvaluation:
     recommended_action: CanaryAction
     traffic_percentage: float
     started_at: datetime
-    evaluated_at: datetime = field(default_factory=datetime.utcnow)
+    evaluated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -547,7 +547,7 @@ class CanaryDeploymentService:
         with self._lock:
             self._canaries[config.model_name] = (
                 config,
-                datetime.utcnow(),
+                datetime.now(UTC),
                 deque(maxlen=window_size),
             )
 
@@ -614,7 +614,7 @@ class CanaryDeploymentService:
         is_error = shadow.error is not None
 
         sample = _ScoredSample(
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(UTC),
             agreed=agreed,
             error=is_error,
             shadow_score=shadow.fraud_score,
@@ -810,5 +810,5 @@ class CanaryDeploymentService:
         Returns:
             Subset of samples whose timestamp falls within the window.
         """
-        cutoff = datetime.utcnow() - timedelta(minutes=window_minutes)
+        cutoff = datetime.now(UTC) - timedelta(minutes=window_minutes)
         return [s for s in samples if s.timestamp >= cutoff]

@@ -6,7 +6,7 @@ Checks: null rate, fraud rate anomaly, data freshness, schema validation
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 import structlog
 from airflow import DAG
@@ -48,7 +48,7 @@ def check_null_rates(**context: object) -> dict[str, float]:
     """Check null rates for critical columns in scored_transactions."""
     ch = _get_clickhouse_client()
 
-    one_hour_ago = datetime.utcnow() - timedelta(hours=1)
+    one_hour_ago = datetime.now(UTC) - timedelta(hours=1)
 
     columns = [
         "transaction_id",
@@ -92,7 +92,7 @@ def check_fraud_rate_anomaly(**context: object) -> float:
     """Detect anomalous fraud flagging rates in the last hour."""
     ch = _get_clickhouse_client()
 
-    one_hour_ago = datetime.utcnow() - timedelta(hours=1)
+    one_hour_ago = datetime.now(UTC) - timedelta(hours=1)
 
     row = ch.execute(
         """
@@ -135,7 +135,7 @@ def check_data_freshness(**context: object) -> float:
         raise ValueError("No data found in scored_transactions table")
 
     latest_ts: datetime = row[0][0]
-    age_seconds = (datetime.utcnow() - latest_ts).total_seconds()
+    age_seconds = (datetime.now(UTC) - latest_ts).total_seconds()
 
     if age_seconds > _MAX_DATA_AGE_SECONDS:
         raise ValueError(

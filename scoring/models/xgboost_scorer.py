@@ -232,7 +232,7 @@ class XGBoostScorer:
         We construct a minimal Transaction for the rule engine since it
         requires one; the features carry the important signals.
         """
-        from datetime import datetime
+        from datetime import UTC, datetime
         from decimal import Decimal
 
         from shared.schemas import TransactionType
@@ -242,7 +242,7 @@ class XGBoostScorer:
             user_id=features.user_id,
             amount=Decimal("0"),
             transaction_type=TransactionType.PURCHASE,
-            timestamp=features.timestamp or datetime.utcnow(),
+            timestamp=features.timestamp or datetime.now(UTC),
         )
 
         logger.warning(

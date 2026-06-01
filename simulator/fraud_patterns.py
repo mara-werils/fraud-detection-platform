@@ -8,7 +8,7 @@ analytics and model training.
 from __future__ import annotations
 
 import random
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import Final
 from uuid import uuid4
@@ -66,7 +66,7 @@ def generate_card_testing(user: UserProfile) -> list[Transaction]:
         10-20 transactions, each $1-$5, spread over ~1 minute.
     """
     count = random.randint(10, 20)
-    base_time = datetime.utcnow()
+    base_time = datetime.now(UTC)
     txns: list[Transaction] = []
 
     for _ in range(count):
@@ -117,7 +117,7 @@ def generate_account_takeover(user: UserProfile) -> list[Transaction]:
         A list containing one fraudulent transaction.
     """
     unusual_hour = random.randint(2, 5)
-    now = datetime.utcnow().replace(hour=unusual_hour, minute=random.randint(0, 59))
+    now = datetime.now(UTC).replace(hour=unusual_hour, minute=random.randint(0, 59))
 
     multiplier = random.uniform(10.0, 50.0)
     amount = round(user.avg_spend * multiplier, 2)
@@ -174,7 +174,7 @@ def generate_geo_anomaly(user: UserProfile) -> list[Transaction]:
     Returns:
         Two transactions: one legitimate-looking, one from a distant location.
     """
-    base_time = datetime.utcnow()
+    base_time = datetime.now(UTC)
 
     # Legitimate-looking transaction at home
     home_lat, home_lon = _jitter_location(user.home_lat(), user.home_lon())
@@ -248,7 +248,7 @@ def generate_velocity_abuse(user: UserProfile) -> list[Transaction]:
         16-25 transactions with monotonically increasing amounts.
     """
     count = random.randint(16, 25)
-    base_time = datetime.utcnow()
+    base_time = datetime.now(UTC)
     base_amount = random.uniform(10.0, 50.0)
     increment = random.uniform(5.0, 30.0)
 
@@ -312,7 +312,7 @@ def generate_merchant_collusion(user: UserProfile) -> list[Transaction]:
     colluding_merchant = _random_merchant(category)
 
     base_amount = round(random.uniform(500.0, 5000.0), 2)
-    base_time = datetime.utcnow()
+    base_time = datetime.now(UTC)
     lat, lon = _jitter_location(user.home_lat(), user.home_lon(), radius_km=5.0)
 
     txns: list[Transaction] = []

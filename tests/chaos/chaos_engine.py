@@ -11,7 +11,7 @@ import random
 import uuid
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
 
@@ -70,7 +70,7 @@ class ChaosExperiment(BaseModel):
     )
     enabled: bool = Field(default=True, description="Whether the experiment can be run")
     tags: list[str] = Field(default_factory=list, description="Grouping tags")
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class SteadyStateHypothesis(BaseModel):
@@ -156,7 +156,7 @@ class ExperimentResult(BaseModel):
 class ChaosReport(BaseModel):
     """Aggregated report across all experiments in a run."""
 
-    generated_at: datetime = Field(default_factory=datetime.utcnow)
+    generated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     total_experiments: int
     passed: int
     failed: int
@@ -318,8 +318,8 @@ class ChaosEngine:
             result = ExperimentResult(
                 experiment_id=experiment_id,
                 experiment_name=experiment.name,
-                started_at=datetime.utcnow(),
-                ended_at=datetime.utcnow(),
+                started_at=datetime.now(UTC),
+                ended_at=datetime.now(UTC),
                 duration_seconds=0.0,
                 status=ExperimentStatus.SKIPPED,
                 hypothesis="(skipped — experiment is disabled)",
@@ -330,7 +330,7 @@ class ChaosEngine:
             return result
 
         self._log.info("experiment_starting", name=experiment.name, id=experiment_id)
-        started_at = datetime.utcnow()
+        started_at = datetime.now(UTC)
 
         hypothesis = _hypothesis_for(experiment)
         metrics_before = await self._collect_metrics()
@@ -340,7 +340,7 @@ class ChaosEngine:
                 experiment, hypothesis
             )
         except Exception as exc:  # noqa: BLE001
-            ended_at = datetime.utcnow()
+            ended_at = datetime.now(UTC)
             result = ExperimentResult(
                 experiment_id=experiment_id,
                 experiment_name=experiment.name,
@@ -359,7 +359,7 @@ class ChaosEngine:
             self._log.error("experiment_aborted", name=experiment.name, error=str(exc))
             return result
 
-        ended_at = datetime.utcnow()
+        ended_at = datetime.now(UTC)
         passed, violations = hypothesis.evaluate(metrics_after)
         status = ExperimentStatus.PASSED if passed else ExperimentStatus.FAILED
 
