@@ -14,8 +14,22 @@ from collections import OrderedDict
 from typing import Any
 
 import structlog
+from prometheus_client import Counter, Histogram
 
 logger = structlog.get_logger(__name__)
+
+CACHE_OPS = Counter(
+    "feature_cache_operations_total",
+    "Feature cache operations by level and result",
+    ["level", "operation", "result"],
+)
+
+CACHE_LATENCY = Histogram(
+    "feature_cache_latency_seconds",
+    "Feature cache operation latency",
+    ["level", "operation"],
+    buckets=(0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1),
+)
 
 
 def _deserialize_cached_value(raw: Any) -> Any:
@@ -111,21 +125,27 @@ class TwoLevelFeatureCache:
         # L1 check
         value = self._l1.get(key)
         if value is not None:
+            CACHE_OPS.labels(level="l1", operation="get", result="hit").inc()
             return value
+        CACHE_OPS.labels(level="l1", operation="get", result="miss").inc()
 
         # L2 check
         try:
+            start = time.monotonic()
             raw = await self._redis.get(key)
+            CACHE_LATENCY.labels(level="l2", operation="get").observe(time.monotonic() - start)
             if raw is not None:
                 value = _deserialize_cached_value(raw)
-                # Promote to L1
                 self._l1.set(key, value)
                 self._l2_hits += 1
+                CACHE_OPS.labels(level="l2", operation="get", result="hit").inc()
                 return value
         except Exception as exc:
+            CACHE_OPS.labels(level="l2", operation="get", result="error").inc()
             await logger.awarning("feature_cache_l2_get_error", error=str(exc))
 
         self._l2_misses += 1
+        CACHE_OPS.labels(level="l2", operation="get", result="miss").inc()
         return None
 
     async def get_many(self, user_id: str, features: list[str]) -> dict[str, Any]:
