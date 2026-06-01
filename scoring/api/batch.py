@@ -17,6 +17,7 @@ logger = structlog.get_logger(__name__)
 router = APIRouter(prefix="/api/v1/batch", tags=["batch"])
 
 MAX_BATCH_SIZE = 1000
+MAX_CONCURRENT_SCORES = 64  # Limit concurrent scoring to prevent resource exhaustion
 
 
 class BatchScoreRequest(BaseModel):
@@ -76,11 +77,14 @@ async def batch_score(batch: BatchScoreRequest, request: Request) -> BatchScoreR
 
     start = time.perf_counter()
 
-    # Score all transactions concurrently
-    tasks = [
-        _score_single(txn, scorer, redis)
-        for txn in batch.transactions
-    ]
+    # Score all transactions with bounded concurrency
+    semaphore = asyncio.Semaphore(MAX_CONCURRENT_SCORES)
+
+    async def _bounded_score(txn: Transaction) -> ScoredTransaction:
+        async with semaphore:
+            return await _score_single(txn, scorer, redis)
+
+    tasks = [_bounded_score(txn) for txn in batch.transactions]
     outcomes = await asyncio.gather(*tasks, return_exceptions=True)
 
     results: list[ScoredTransaction] = []
