@@ -144,6 +144,20 @@ class TransactionStore:
                 "unique_users": len(self._by_user),
             }
 
+    def clear(self) -> None:
+        """Remove all transactions from the store."""
+        with self._lock:
+            self._transactions.clear()
+            self._by_user.clear()
+            self._by_txn_id.clear()
+            logger.info("transaction_store_cleared")
+
+    def get_flagged(self, limit: int = 100) -> list[ScoredTransaction]:
+        """Return the most recently flagged transactions."""
+        with self._lock:
+            flagged = [t for t in reversed(self._transactions) if t.is_flagged]
+        return flagged[:limit]
+
     def _evict_oldest(self, count: int) -> None:
         """Remove the oldest N transactions."""
         self._transactions = self._transactions[count:]
