@@ -110,6 +110,9 @@ async def health_check(request: Request) -> dict[str, Any]:
     overall = kafka_healthy and redis_healthy and model_loaded
     status_code = 200 if overall else 503
 
+    uptime = None
+    startup_time = getattr(request.app.state, "startup_time_seconds", None)
+
     body = {
         "status": "healthy" if overall else "unhealthy",
         "components": {
@@ -117,6 +120,9 @@ async def health_check(request: Request) -> dict[str, Any]:
             "redis": "connected" if redis_healthy else "disconnected",
             "model": "loaded" if model_loaded else "not_loaded",
         },
+        "model_version": scorer.model_version if scorer else None,
+        "total_scored": scorer.total_scored if scorer else 0,
+        "startup_time_seconds": round(startup_time, 3) if startup_time else None,
     }
 
     return Response(
