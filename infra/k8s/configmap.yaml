@@ -1,0 +1,78 @@
+---
+# ConfigMap for scoring service application settings
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: scoring-config
+  namespace: fraud-detection
+  labels:
+    app: scoring-service
+    component: scoring
+    app.kubernetes.io/name: scoring-service
+    app.kubernetes.io/part-of: fraud-detection-platform
+data:
+  # Service
+  SERVICE_NAME: "scoring-service"
+  SERVICE_VERSION: "1.1.0"
+
+  # Server
+  SCORING_HOST: "0.0.0.0"
+  SCORING_PORT: "8000"
+
+  # Logging
+  LOG_LEVEL: "INFO"
+  LOG_FORMAT: "json"
+
+  # Kafka
+  KAFKA_BOOTSTRAP_SERVERS: "kafka.fraud-detection.svc.cluster.local:9092"
+  KAFKA_CONSUMER_GROUP: "scoring-service"
+  KAFKA_TOPIC_RAW_TXN: "raw_txn"
+  KAFKA_TOPIC_SCORED: "scored"
+  KAFKA_TOPIC_ALERTS: "alerts"
+  KAFKA_MAX_RETRIES: "5"
+  KAFKA_RETRY_BACKOFF_MS: "1000"
+
+  # Redis
+  REDIS_URL: "redis://redis.fraud-detection.svc.cluster.local:6379/0"
+  REDIS_MAX_CONNECTIONS: "20"
+  REDIS_SOCKET_TIMEOUT: "5.0"
+
+  # Scoring thresholds
+  SCORE_THRESHOLD_BLOCK: "0.8"
+  SCORE_THRESHOLD_REVIEW: "0.5"
+
+  # Model
+  MODEL_VERSION: "rule-engine-v1"
+  MODEL_TYPE: "rule-based"
+
+  # PostgreSQL
+  DATABASE_URL: "postgresql+asyncpg://fraud:fraud@postgres.fraud-detection.svc.cluster.local:5432/fraud"
+  DB_POOL_SIZE: "20"
+  DB_MAX_OVERFLOW: "40"
+
+  # Feature cache
+  FEATURE_CACHE_TTL_SECONDS: "300"
+  FEATURE_CACHE_L1_MAX_SIZE: "10000"
+
+  # Batch inference
+  BATCH_INFERENCE_MAX_SIZE: "64"
+  BATCH_INFERENCE_MAX_WAIT_MS: "10"
+
+  # SLO targets
+  SLO_P99_LATENCY_MS: "200.0"
+  SLO_ERROR_RATE_THRESHOLD: "0.001"
+
+  # Rate limiting
+  RATE_LIMIT_REQUESTS_PER_MINUTE: "600"
+  RATE_LIMIT_BURST_SIZE: "100"
+
+  # CORS
+  CORS_ALLOWED_ORIGINS: "*"
+  CORS_ALLOW_CREDENTIALS: "true"
+
+  # Graceful shutdown
+  SHUTDOWN_TIMEOUT_SECONDS: "30"
+
+  # Observability
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://jaeger-collector.monitoring.svc.cluster.local:4317"
+  OTEL_SERVICE_NAME: "scoring-service"
