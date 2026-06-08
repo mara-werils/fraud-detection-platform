@@ -1,0 +1,83 @@
+---
+# ClusterIP Service for the scoring service
+apiVersion: v1
+kind: Service
+metadata:
+  name: scoring-service
+  namespace: fraud-detection
+  labels:
+    app: scoring-service
+    component: scoring
+    app.kubernetes.io/name: scoring-service
+    app.kubernetes.io/part-of: fraud-detection-platform
+spec:
+  type: ClusterIP
+  selector:
+    app: scoring-service
+  ports:
+    - port: 80
+      targetPort: 8000
+      protocol: TCP
+      name: http
+
+---
+# Ingress with rate-limiting annotations (nginx ingress controller)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: scoring-service-ingress
+  namespace: fraud-detection
+  labels:
+    app: scoring-service
+    app.kubernetes.io/part-of: fraud-detection-platform
+  annotations:
+    # Rate limiting — nginx ingress controller
+    nginx.ingress.kubernetes.io/limit-rps: "100"
+    nginx.ingress.kubernetes.io/limit-rpm: "6000"
+    nginx.ingress.kubernetes.io/limit-burst-multiplier: "5"
+    nginx.ingress.kubernetes.io/limit-connections: "50"
+    nginx.ingress.kubernetes.io/limit-whitelist: ""
+
+    # Rate limit response
+    nginx.ingress.kubernetes.io/server-snippet: |
+      limit_req_status 429;
+
+    # Proxy settings
+    nginx.ingress.kubernetes.io/proxy-body-size: "1m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "30"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "30"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "10"
+
+    # SSL and security
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "X-Content-Type-Options: nosniff";
+      more_set_headers "X-Frame-Options: DENY";
+      more_set_headers "X-XSS-Protection: 1; mode=block";
+      more_set_headers "Strict-Transport-Security: max-age=31536000; includeSubDomains";
+
+    # CORS
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "Authorization, Content-Type, X-Request-ID, X-API-Key"
+
+    # TLS certificate (cert-manager)
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - scoring.fraud-detection.example.com
+      secretName: scoring-service-tls
+  rules:
+    - host: scoring.fraud-detection.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: scoring-service
+                port:
+                  name: http
