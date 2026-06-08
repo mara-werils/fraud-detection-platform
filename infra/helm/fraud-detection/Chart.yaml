@@ -1,0 +1,13 @@
+apiVersion: v2
+name: fraud-detection
+description: Real-time fraud detection platform with ML ensemble scoring, graph analysis, and analyst workflows
+type: application
+version: 0.1.0
+appVersion: "1.1.0"
+keywords:
+  - fraud-detection
+  - machine-learning
+  - real-time
+  - scoring
+maintainers:
+  - name: fraud-detection-platform
