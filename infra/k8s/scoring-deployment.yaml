@@ -1,0 +1,217 @@
+---
+# Deployment for the scoring service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scoring-service
+  namespace: fraud-detection
+  labels:
+    app: scoring-service
+    component: scoring
+    app.kubernetes.io/name: scoring-service
+    app.kubernetes.io/version: "1.1.0"
+    app.kubernetes.io/part-of: fraud-detection-platform
+    app.kubernetes.io/managed-by: kubectl
+spec:
+  replicas: 3
+  revisionHistoryLimit: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: scoring-service
+  template:
+    metadata:
+      labels:
+        app: scoring-service
+        component: scoring
+        app.kubernetes.io/name: scoring-service
+        app.kubernetes.io/part-of: fraud-detection-platform
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: scoring-service
+      terminationGracePeriodSeconds: 30
+
+      # Anti-affinity: spread pods across nodes and prefer spreading across zones
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - scoring-service
+              topologyKey: kubernetes.io/hostname
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - scoring-service
+                topologyKey: topology.kubernetes.io/zone
+
+      containers:
+        - name: scoring
+          image: ghcr.io/fraud-detection-platform/scoring-service:1.1.0
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+              protocol: TCP
+              name: http
+
+          # Resource limits and requests
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "512Mi"
+
+          # Liveness probe — lightweight check that process is alive
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+            successThreshold: 1
+
+          # Readiness probe — checks all dependencies before receiving traffic
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+            successThreshold: 1
+
+          # Startup probe — allows slow starts without killing the pod
+          startupProbe:
+            httpGet:
+              path: /health/live
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 12
+
+          envFrom:
+            - configMapRef:
+                name: scoring-config
+            - secretRef:
+                name: scoring-secrets
+
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: scoring-service
+
+---
+# HorizontalPodAutoscaler — scale on CPU and custom latency metric
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: scoring-service-hpa
+  namespace: fraud-detection
+  labels:
+    app: scoring-service
+    app.kubernetes.io/part-of: fraud-detection-platform
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: scoring-service
+  minReplicas: 3
+  maxReplicas: 20
+  metrics:
+    # Scale on CPU utilization
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    # Scale on memory utilization
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+    # Scale on custom metric: p99 scoring latency (via Prometheus adapter)
+    - type: Pods
+      pods:
+        metric:
+          name: scoring_request_latency_p99_ms
+        target:
+          type: AverageValue
+          averageValue: "150"
+    # Scale on requests-per-second per pod
+    - type: Pods
+      pods:
+        metric:
+          name: scoring_requests_per_second
+        target:
+          type: AverageValue
+          averageValue: "500"
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 30
+      policies:
+        - type: Pods
+          value: 4
+          periodSeconds: 60
+        - type: Percent
+          value: 50
+          periodSeconds: 60
+      selectPolicy: Max
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 120
+      selectPolicy: Min
+
+---
+# PodDisruptionBudget — ensure minimum availability during voluntary disruptions
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: scoring-service-pdb
+  namespace: fraud-detection
+  labels:
+    app: scoring-service
+    app.kubernetes.io/part-of: fraud-detection-platform
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: scoring-service

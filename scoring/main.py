@@ -24,6 +24,7 @@ from scoring.api.explainability import router as explainability_router
 from scoring.api.export import router as export_router
 from scoring.api.feedback import router as feedback_router
 from scoring.api.middleware import setup_middleware
+from scoring.api.realtime_dashboard import router as realtime_dashboard_router
 from scoring.api.routes import router
 from scoring.api.sanctions import router as sanctions_router
 from scoring.api.transactions import router as transactions_router
@@ -265,6 +266,7 @@ def create_app() -> FastAPI:
     app.include_router(export_router)
     app.include_router(analytics_router)
     app.include_router(entity_lists_router)
+    app.include_router(realtime_dashboard_router)
 
     # API versioning middleware
     app.add_middleware(VersioningMiddleware)
