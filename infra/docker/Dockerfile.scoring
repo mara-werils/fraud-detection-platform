@@ -1,0 +1,112 @@
+# ============================================================================
+# Dockerfile.scoring — Production-optimized image for the scoring service
+# ============================================================================
+# Multi-stage build:
+#   1. deps    — install Python dependencies into a virtual-env
+#   2. runtime — slim final image with non-root user and health check
+#
+# Build:
+#   docker build -f infra/docker/Dockerfile.scoring -t scoring-service .
+#
+# Security labels follow OCI image-spec annotations.
+# ============================================================================
+
+# ---------------------------------------------------------------------------
+# Stage 1 — dependency installation
+# ---------------------------------------------------------------------------
+FROM python:3.12-slim AS deps
+
+WORKDIR /build
+
+# System packages required by some Python C extensions (numpy, asyncpg, etc.)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends gcc libpq-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy only dependency metadata first for optimal layer caching.
+# Changes to application code will not bust this layer.
+COPY pyproject.toml ./
+
+# Install into a virtual-env so we can COPY it cleanly into the runtime stage.
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir .
+
+# ---------------------------------------------------------------------------
+# Stage 2 — production runtime
+# ---------------------------------------------------------------------------
+FROM python:3.12-slim AS runtime
+
+# OCI / security scanning labels
+LABEL org.opencontainers.image.title="fraud-detection-scoring" \
+      org.opencontainers.image.description="Real-time ML-powered fraud scoring service" \
+      org.opencontainers.image.vendor="fraud-detection-platform" \
+      org.opencontainers.image.version="1.1.0" \
+      org.opencontainers.image.source="https://github.com/fraud-detection-platform" \
+      org.opencontainers.image.licenses="MIT" \
+      security.scanning.enabled="true" \
+      security.scanning.tool="trivy"
+
+# Minimal runtime deps (libpq for asyncpg, tini for PID-1 signal handling)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends libpq5 tini curl && \
+    rm -rf /var/lib/apt/lists/*
+
+# Non-root user
+RUN groupadd --system --gid 1001 app && \
+    useradd --system --uid 1001 --gid app --home-dir /app --shell /usr/sbin/nologin app
+
+WORKDIR /app
+
+# Copy virtualenv from builder stage
+COPY --from=deps /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Copy application source
+COPY shared/  ./shared/
+COPY scoring/ ./scoring/
+COPY sdk/     ./sdk/
+
+# Copy health check script
+COPY infra/docker/healthcheck.py ./healthcheck.py
+
+# Environment
+ENV PYTHONPATH=/app \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    # Default config — override at deploy time
+    SCORING_HOST=0.0.0.0 \
+    SCORING_PORT=8000 \
+    LOG_FORMAT=json \
+    LOG_LEVEL=INFO \
+    # Healthcheck env
+    SCORING_HEALTH_URL=http://127.0.0.1:8000/health/live \
+    HEALTHCHECK_CACHE_TTL=10 \
+    HEALTHCHECK_TIMEOUT=5
+
+# Make healthcheck executable
+RUN chmod +x /app/healthcheck.py
+
+# Switch to non-root user
+USER app
+
+EXPOSE 8000
+
+# Docker HEALTHCHECK — runs every 30s, allows 60s startup grace period
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD ["python", "/app/healthcheck.py"]
+
+# Use tini as PID 1 for proper signal forwarding (SIGTERM, SIGINT).
+# This ensures graceful shutdown of uvicorn workers.
+ENTRYPOINT ["tini", "--"]
+
+CMD ["uvicorn", "scoring.main:app", \
+     "--host", "0.0.0.0", \
+     "--port", "8000",    \
+     "--workers", "2",    \
+     "--loop", "uvloop",  \
+     "--http", "httptools", \
+     "--timeout-graceful-shutdown", "30", \
+     "--log-level", "info"]
