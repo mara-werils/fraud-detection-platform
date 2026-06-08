@@ -1,0 +1,200 @@
+# -- Number of replicas
+replicaCount: 3
+
+image:
+  repository: fraud-detection/scoring
+  tag: ""  # Defaults to appVersion
+  pullPolicy: Always
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# -- Service account configuration
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# -- Pod annotations
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8000"
+  prometheus.io/path: "/metrics"
+
+# -- Pod security context
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+# -- Container security context
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+# -- Container port
+containerPort: 8000
+
+# -- Resource requests and limits
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# -- Liveness probe configuration
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 15
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+# -- Readiness probe configuration
+readinessProbe:
+  httpGet:
+    path: /health/ready
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+# -- Rolling update strategy
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 0
+
+# -- Termination grace period in seconds
+terminationGracePeriodSeconds: 30
+
+# -- Service configuration
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8000
+
+# -- Ingress configuration
+ingress:
+  enabled: false
+  className: nginx
+  annotations: {}
+    # cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: fraud-detection.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: fraud-detection-tls
+  #    hosts:
+  #      - fraud-detection.example.com
+
+# -- Horizontal Pod Autoscaler configuration
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 20
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 120
+
+# -- Pod anti-affinity settings
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - fraud-detection
+          topologyKey: kubernetes.io/hostname
+
+nodeSelector: {}
+
+tolerations: []
+
+# ---------------------------------------------------------------------------
+# External dependency connection settings
+# ---------------------------------------------------------------------------
+
+# -- Redis connection settings
+redis:
+  host: redis
+  port: 6379
+  db: 0
+  # url overrides host/port/db when set
+  url: ""
+  password: ""
+
+# -- Kafka connection settings
+kafka:
+  bootstrapServers: kafka:9092
+  consumerGroup: fraud-scoring
+  securityProtocol: PLAINTEXT
+  # SASL settings (used when securityProtocol is SASL_SSL)
+  sasl:
+    mechanism: ""
+    username: ""
+    password: ""
+
+# -- PostgreSQL connection settings
+postgresql:
+  host: postgresql
+  port: 5432
+  database: fraud_detection
+  username: fraud
+  password: ""
+  sslMode: prefer
+
+# ---------------------------------------------------------------------------
+# Application-level configuration
+# ---------------------------------------------------------------------------
+
+# -- Feature flags
+featureFlags:
+  enableGraphAnalysis: true
+  enableMLScoring: true
+  enableRealTimeAlerts: true
+  enableCaseManagement: true
+
+# -- Rate limiting configuration
+rateLimits:
+  enabled: true
+  requestsPerSecond: 1000
+  burstSize: 2000
+
+# -- Extra environment variables (key-value pairs)
+extraEnv: []
+#  - name: LOG_LEVEL
+#    value: info
+
+# -- Extra environment variables from secrets/configmaps
+extraEnvFrom: []
+#  - secretRef:
+#      name: my-secret
