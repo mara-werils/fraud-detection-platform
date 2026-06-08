@@ -1,0 +1,347 @@
+{
+  "dashboard": {
+    "title": "Fraud Overview",
+    "uid": "fraud-overview",
+    "tags": ["fraud-detection", "overview", "operations"],
+    "timezone": "utc",
+    "refresh": "30s",
+    "schemaVersion": 39,
+    "templating": {
+      "list": [
+        {
+          "name": "environment",
+          "type": "custom",
+          "label": "Environment",
+          "current": {"text": "production", "value": "production"},
+          "options": [
+            {"text": "production", "value": "production", "selected": true},
+            {"text": "staging", "value": "staging", "selected": false},
+            {"text": "development", "value": "development", "selected": false}
+          ],
+          "query": "production,staging,development"
+        },
+        {
+          "name": "time_range",
+          "type": "interval",
+          "label": "Time Range",
+          "current": {"text": "5m", "value": "5m"},
+          "options": [
+            {"text": "1m", "value": "1m", "selected": false},
+            {"text": "5m", "value": "5m", "selected": true},
+            {"text": "15m", "value": "15m", "selected": false},
+            {"text": "30m", "value": "30m", "selected": false},
+            {"text": "1h", "value": "1h", "selected": false}
+          ],
+          "query": "1m,5m,15m,30m,1h"
+        }
+      ]
+    },
+    "annotations": {
+      "list": [
+        {
+          "name": "Fraud Alerts",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "enable": true,
+          "iconColor": "red",
+          "expr": "ALERTS{alertname=~\"FraudRate.*\", environment=\"$environment\"}",
+          "titleFormat": "{{alertname}}",
+          "textFormat": "Severity: {{severity}}"
+        },
+        {
+          "name": "Model Deployments",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "enable": true,
+          "iconColor": "blue",
+          "expr": "changes(fraud_model_version{environment=\"$environment\"}[5m]) > 0",
+          "titleFormat": "Model Deployed",
+          "textFormat": "New model version deployed"
+        }
+      ]
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Total Transactions",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "targets": [
+          {
+            "expr": "sum(rate(transactions_total{environment=\"$environment\"}[$time_range]))",
+            "legendFormat": "Total TPS"
+          },
+          {
+            "expr": "sum(rate(transactions_total{environment=\"$environment\", flagged=\"true\"}[$time_range]))",
+            "legendFormat": "Flagged TPS"
+          },
+          {
+            "expr": "sum(rate(transactions_total{environment=\"$environment\", blocked=\"true\"}[$time_range]))",
+            "legendFormat": "Blocked TPS"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ops",
+            "custom": {
+              "drawStyle": "line",
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "pointSize": 5,
+              "showPoints": "auto"
+            }
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Fraud Rate %",
+        "type": "gauge",
+        "gridPos": {"h": 8, "w": 6, "x": 12, "y": 0},
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "targets": [
+          {
+            "expr": "sum(rate(transactions_total{environment=\"$environment\", flagged=\"true\"}[$time_range])) / sum(rate(transactions_total{environment=\"$environment\"}[$time_range]))",
+            "legendFormat": "Fraud Rate"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "min": 0,
+            "max": 1,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 0.01},
+                {"color": "orange", "value": 0.03},
+                {"color": "red", "value": 0.05}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "Model Accuracy",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 3, "x": 18, "y": 0},
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "targets": [
+          {
+            "expr": "fraud_model_accuracy{environment=\"$environment\"}",
+            "legendFormat": "Accuracy"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 0.85},
+                {"color": "green", "value": 0.95}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "Active Cases",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 3, "x": 21, "y": 0},
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "targets": [
+          {
+            "expr": "sum(fraud_cases_active{environment=\"$environment\"})",
+            "legendFormat": "Active Cases"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 50},
+                {"color": "red", "value": 200}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "Scoring Latency p50 / p95 / p99",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(fraud_scoring_latency_seconds_bucket{environment=\"$environment\"}[$time_range]))",
+            "legendFormat": "p50"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(fraud_scoring_latency_seconds_bucket{environment=\"$environment\"}[$time_range]))",
+            "legendFormat": "p95"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(fraud_scoring_latency_seconds_bucket{environment=\"$environment\"}[$time_range]))",
+            "legendFormat": "p99"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "custom": {
+              "drawStyle": "line",
+              "lineWidth": 2,
+              "fillOpacity": 5
+            }
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "Top Triggered Rules",
+        "type": "barchart",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "targets": [
+          {
+            "expr": "topk(10, sum by (rule_name) (increase(fraud_rule_triggered_total{environment=\"$environment\"}[$time_range])))",
+            "legendFormat": "{{rule_name}}",
+            "format": "table",
+            "instant": true
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "axisCenteredZero": false,
+              "fillOpacity": 80,
+              "gradientMode": "scheme",
+              "showValue": "auto"
+            },
+            "color": {"mode": "palette-classic"}
+          }
+        },
+        "options": {
+          "orientation": "horizontal",
+          "barWidth": 0.8,
+          "groupWidth": 0.7,
+          "legend": {"displayMode": "list", "placement": "bottom"}
+        }
+      },
+      {
+        "id": 7,
+        "title": "Fraud by Country",
+        "type": "geomap",
+        "gridPos": {"h": 10, "w": 12, "x": 0, "y": 16},
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "targets": [
+          {
+            "expr": "sum by (country_code) (increase(transactions_total{environment=\"$environment\", flagged=\"true\"}[$time_range]))",
+            "legendFormat": "{{country_code}}",
+            "format": "table",
+            "instant": true
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "continuous-reds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 10},
+                {"color": "red", "value": 100}
+              ]
+            }
+          }
+        },
+        "options": {
+          "view": {
+            "id": "zero",
+            "lat": 20,
+            "lon": 0,
+            "zoom": 2
+          },
+          "basemap": {
+            "type": "default",
+            "name": "World"
+          },
+          "layers": [
+            {
+              "type": "markers",
+              "name": "Fraud Hotspots",
+              "config": {
+                "showLegend": true,
+                "style": {
+                  "size": {"field": "Value", "min": 3, "max": 20},
+                  "color": {"field": "Value"},
+                  "opacity": 0.7
+                }
+              },
+              "location": {
+                "mode": "lookup",
+                "lookup": "country_code",
+                "gazetteer": "public/gazetteer/countries.json"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": 8,
+        "title": "Alert Timeline",
+        "type": "timeseries",
+        "gridPos": {"h": 10, "w": 12, "x": 12, "y": 16},
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "targets": [
+          {
+            "expr": "sum(rate(fraud_alerts_total{environment=\"$environment\", severity=\"critical\"}[$time_range]))",
+            "legendFormat": "Critical"
+          },
+          {
+            "expr": "sum(rate(fraud_alerts_total{environment=\"$environment\", severity=\"high\"}[$time_range]))",
+            "legendFormat": "High"
+          },
+          {
+            "expr": "sum(rate(fraud_alerts_total{environment=\"$environment\", severity=\"medium\"}[$time_range]))",
+            "legendFormat": "Medium"
+          },
+          {
+            "expr": "sum(rate(fraud_alerts_total{environment=\"$environment\", severity=\"low\"}[$time_range]))",
+            "legendFormat": "Low"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "custom": {
+              "drawStyle": "bars",
+              "lineWidth": 1,
+              "fillOpacity": 50,
+              "stacking": {"mode": "normal"}
+            }
+          },
+          "overrides": [
+            {"matcher": {"id": "byName", "options": "Critical"}, "properties": [{"id": "color", "value": {"fixedColor": "red", "mode": "fixed"}}]},
+            {"matcher": {"id": "byName", "options": "High"}, "properties": [{"id": "color", "value": {"fixedColor": "orange", "mode": "fixed"}}]},
+            {"matcher": {"id": "byName", "options": "Medium"}, "properties": [{"id": "color", "value": {"fixedColor": "yellow", "mode": "fixed"}}]},
+            {"matcher": {"id": "byName", "options": "Low"}, "properties": [{"id": "color", "value": {"fixedColor": "blue", "mode": "fixed"}}]}
+          ]
+        },
+        "options": {
+          "tooltip": {"mode": "multi"},
+          "legend": {"displayMode": "list", "placement": "bottom"}
+        }
+      }
+    ]
+  }
+}
