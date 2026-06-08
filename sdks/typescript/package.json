@@ -1,7 +1,7 @@
 {
   "name": "@fraud-detection/sdk",
   "version": "1.0.0",
-  "description": "TypeScript SDK for the Fraud Detection Platform — score transactions, manage cases, and monitor model drift.",
+  "description": "TypeScript SDK for the Fraud Detection Platform — score transactions, manage cases, rules, decisions, and monitor model drift with real-time WebSocket events.",
   "license": "MIT",
   "author": "Fraud Detection Platform Team",
   "homepage": "https://github.com/fraud-detection-platform",
@@ -17,7 +17,10 @@
     "ml",
     "risk",
     "sdk",
-    "typescript"
+    "typescript",
+    "websocket",
+    "real-time",
+    "rules-engine"
   ],
 
   "type": "module",

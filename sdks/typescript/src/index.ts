@@ -25,6 +25,7 @@
 // Client + error classes
 export {
   FraudClient,
+  FraudWebSocket,
   FraudAPIError,
   FraudTimeoutError,
   FraudNetworkError,
@@ -91,6 +92,26 @@ export type {
   // Health
   ComponentStatus,
   HealthStatus,
+
+  // Rules
+  RuleConditionOperator,
+  RuleCondition,
+  RuleAction,
+  Rule,
+  CreateRuleInput,
+  UpdateRuleInput,
+  RuleFilters,
+  RuleListResponse,
+
+  // Decision
+  DecisionResult,
+
+  // WebSocket
+  WebSocketEventType,
+  WebSocketEvent,
+  WebSocketConfig,
+  WebSocketEventHandler,
+  WebSocketStateChangeHandler,
 
   // Generic
   PaginatedResponse,

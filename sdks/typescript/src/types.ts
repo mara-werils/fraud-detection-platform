@@ -423,6 +423,143 @@ export interface TransactionStats {
 }
 
 // ---------------------------------------------------------------------------
+// Rules
+// ---------------------------------------------------------------------------
+
+export type RuleConditionOperator =
+  | "gt"
+  | "gte"
+  | "lt"
+  | "lte"
+  | "eq"
+  | "neq"
+  | "in"
+  | "not_in"
+  | "contains"
+  | "regex";
+
+export type RuleAction = "block" | "review" | "allow" | "flag" | "alert";
+
+export interface RuleCondition {
+  field: string;
+  operator: RuleConditionOperator;
+  value: unknown;
+}
+
+export interface Rule {
+  rule_id: string;
+  name: string;
+  description: string | null;
+  conditions: RuleCondition[];
+  action: RuleAction;
+  priority: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  tags: string[];
+  metadata: Record<string, unknown>;
+}
+
+export interface CreateRuleInput {
+  name: string;
+  description?: string;
+  conditions: RuleCondition[];
+  action: RuleAction;
+  priority?: number;
+  is_active?: boolean;
+  tags?: string[];
+  metadata?: Record<string, unknown>;
+}
+
+export interface UpdateRuleInput {
+  name?: string;
+  description?: string;
+  conditions?: RuleCondition[];
+  action?: RuleAction;
+  priority?: number;
+  is_active?: boolean;
+  tags?: string[];
+  metadata?: Record<string, unknown>;
+}
+
+export interface RuleFilters {
+  is_active?: boolean;
+  action?: RuleAction;
+  tag?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface RuleListResponse {
+  rules: Rule[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+// ---------------------------------------------------------------------------
+// Decision
+// ---------------------------------------------------------------------------
+
+export interface DecisionResult {
+  transaction_id: string;
+  decision: Decision;
+  fraud_score: number;
+  rules_triggered: string[];
+  model_version: string;
+  timestamp: string;
+  explanation: string | null;
+  metadata: Record<string, unknown>;
+}
+
+// ---------------------------------------------------------------------------
+// WebSocket event types
+// ---------------------------------------------------------------------------
+
+export type WebSocketEventType =
+  | "transaction.scored"
+  | "transaction.flagged"
+  | "case.created"
+  | "case.updated"
+  | "rule.triggered"
+  | "alert.fired"
+  | "model.updated"
+  | "drift.detected";
+
+export interface WebSocketEvent<T = unknown> {
+  event_type: WebSocketEventType;
+  timestamp: string;
+  org_id: string;
+  payload: T;
+}
+
+export interface WebSocketConfig {
+  /** WebSocket URL. Defaults to ws://localhost:8000/ws/events */
+  url?: string;
+  /** Organization ID for event filtering */
+  orgId: string;
+  /** User ID for tracking (defaults to "anonymous") */
+  userId?: string;
+  /** Automatic reconnect on disconnect. Defaults to true */
+  autoReconnect?: boolean;
+  /** Maximum reconnect attempts. Defaults to 10 */
+  maxReconnectAttempts?: number;
+  /** Base delay (ms) between reconnect attempts. Defaults to 1000 */
+  reconnectDelay?: number;
+  /** Heartbeat/ping interval in ms. Defaults to 30_000 */
+  pingInterval?: number;
+}
+
+export type WebSocketEventHandler<T = unknown> = (
+  event: WebSocketEvent<T>
+) => void;
+
+export type WebSocketStateChangeHandler = (
+  state: "connecting" | "connected" | "disconnected" | "reconnecting"
+) => void;
+
+// ---------------------------------------------------------------------------
 // Error types
 // ---------------------------------------------------------------------------
 
