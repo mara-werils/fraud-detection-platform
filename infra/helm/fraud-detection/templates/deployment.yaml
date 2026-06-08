@@ -1,0 +1,130 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "fraud-detection.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "fraud-detection.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  strategy:
+    {{- toYaml .Values.strategy | nindent 4 }}
+  selector:
+    matchLabels:
+      {{- include "fraud-detection.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "fraud-detection.selectorLabels" . | nindent 8 }}
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "fraud-detection.serviceAccountName" . }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: {{ include "fraud-detection.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.containerPort }}
+              protocol: TCP
+          env:
+            # -- Redis
+            - name: REDIS_URL
+              value: {{ include "fraud-detection.redisUrl" . | quote }}
+            {{- if .Values.redis.password }}
+            - name: REDIS_PASSWORD
+              value: {{ .Values.redis.password | quote }}
+            {{- end }}
+            # -- Kafka
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: {{ .Values.kafka.bootstrapServers | quote }}
+            - name: KAFKA_CONSUMER_GROUP
+              value: {{ .Values.kafka.consumerGroup | quote }}
+            - name: KAFKA_SECURITY_PROTOCOL
+              value: {{ .Values.kafka.securityProtocol | quote }}
+            {{- if .Values.kafka.sasl.mechanism }}
+            - name: KAFKA_SASL_MECHANISM
+              value: {{ .Values.kafka.sasl.mechanism | quote }}
+            - name: KAFKA_SASL_USERNAME
+              value: {{ .Values.kafka.sasl.username | quote }}
+            - name: KAFKA_SASL_PASSWORD
+              value: {{ .Values.kafka.sasl.password | quote }}
+            {{- end }}
+            # -- PostgreSQL
+            - name: POSTGRES_HOST
+              value: {{ .Values.postgresql.host | quote }}
+            - name: POSTGRES_PORT
+              value: {{ .Values.postgresql.port | quote }}
+            - name: POSTGRES_DB
+              value: {{ .Values.postgresql.database | quote }}
+            - name: POSTGRES_USER
+              value: {{ .Values.postgresql.username | quote }}
+            - name: POSTGRES_PASSWORD
+              value: {{ .Values.postgresql.password | quote }}
+            - name: POSTGRES_SSLMODE
+              value: {{ .Values.postgresql.sslMode | quote }}
+            # -- Feature flags
+            - name: ENABLE_GRAPH_ANALYSIS
+              value: {{ .Values.featureFlags.enableGraphAnalysis | quote }}
+            - name: ENABLE_ML_SCORING
+              value: {{ .Values.featureFlags.enableMLScoring | quote }}
+            - name: ENABLE_REAL_TIME_ALERTS
+              value: {{ .Values.featureFlags.enableRealTimeAlerts | quote }}
+            - name: ENABLE_CASE_MANAGEMENT
+              value: {{ .Values.featureFlags.enableCaseManagement | quote }}
+            # -- Rate limits
+            - name: RATE_LIMIT_ENABLED
+              value: {{ .Values.rateLimits.enabled | quote }}
+            - name: RATE_LIMIT_RPS
+              value: {{ .Values.rateLimits.requestsPerSecond | quote }}
+            - name: RATE_LIMIT_BURST
+              value: {{ .Values.rateLimits.burstSize | quote }}
+            {{- with .Values.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.extraEnvFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
