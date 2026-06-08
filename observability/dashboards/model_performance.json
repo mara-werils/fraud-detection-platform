@@ -1,0 +1,295 @@
+{
+  "dashboard": {
+    "title": "ML Model Performance",
+    "uid": "model-performance",
+    "tags": ["fraud-detection", "ml", "model-monitoring"],
+    "timezone": "utc",
+    "refresh": "1m",
+    "schemaVersion": 39,
+    "templating": {
+      "list": [
+        {
+          "name": "environment",
+          "type": "custom",
+          "label": "Environment",
+          "current": {"text": "production", "value": "production"},
+          "options": [
+            {"text": "production", "value": "production", "selected": true},
+            {"text": "staging", "value": "staging", "selected": false},
+            {"text": "development", "value": "development", "selected": false}
+          ],
+          "query": "production,staging,development"
+        },
+        {
+          "name": "time_range",
+          "type": "interval",
+          "label": "Time Range",
+          "current": {"text": "5m", "value": "5m"},
+          "options": [
+            {"text": "1m", "value": "1m", "selected": false},
+            {"text": "5m", "value": "5m", "selected": true},
+            {"text": "15m", "value": "15m", "selected": false},
+            {"text": "30m", "value": "30m", "selected": false},
+            {"text": "1h", "value": "1h", "selected": false}
+          ],
+          "query": "1m,5m,15m,30m,1h"
+        },
+        {
+          "name": "model_version",
+          "type": "query",
+          "label": "Model Version",
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "query": "label_values(fraud_model_predictions_total{environment=\"$environment\"}, model_version)",
+          "refresh": 2,
+          "includeAll": true,
+          "current": {"text": "All", "value": "$__all"}
+        }
+      ]
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Prediction Distribution",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "targets": [
+          {
+            "expr": "sum(rate(fraud_model_predictions_total{environment=\"$environment\", model_version=~\"$model_version\", prediction=\"fraud\"}[$time_range]))",
+            "legendFormat": "Fraud"
+          },
+          {
+            "expr": "sum(rate(fraud_model_predictions_total{environment=\"$environment\", model_version=~\"$model_version\", prediction=\"legitimate\"}[$time_range]))",
+            "legendFormat": "Legitimate"
+          },
+          {
+            "expr": "sum(rate(fraud_model_predictions_total{environment=\"$environment\", model_version=~\"$model_version\", prediction=\"review\"}[$time_range]))",
+            "legendFormat": "Needs Review"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ops",
+            "custom": {
+              "drawStyle": "line",
+              "lineWidth": 2,
+              "fillOpacity": 15,
+              "pointSize": 5,
+              "stacking": {"mode": "normal"}
+            }
+          },
+          "overrides": [
+            {"matcher": {"id": "byName", "options": "Fraud"}, "properties": [{"id": "color", "value": {"fixedColor": "red", "mode": "fixed"}}]},
+            {"matcher": {"id": "byName", "options": "Legitimate"}, "properties": [{"id": "color", "value": {"fixedColor": "green", "mode": "fixed"}}]},
+            {"matcher": {"id": "byName", "options": "Needs Review"}, "properties": [{"id": "color", "value": {"fixedColor": "yellow", "mode": "fixed"}}]}
+          ]
+        },
+        "options": {
+          "tooltip": {"mode": "multi"},
+          "legend": {"displayMode": "list", "placement": "bottom"}
+        }
+      },
+      {
+        "id": 2,
+        "title": "Feature Importance Over Time",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "targets": [
+          {
+            "expr": "topk(8, fraud_model_feature_importance{environment=\"$environment\", model_version=~\"$model_version\"})",
+            "legendFormat": "{{feature_name}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "none",
+            "custom": {
+              "drawStyle": "line",
+              "lineWidth": 2,
+              "fillOpacity": 5,
+              "pointSize": 4,
+              "showPoints": "auto"
+            },
+            "color": {"mode": "palette-classic"}
+          }
+        },
+        "options": {
+          "tooltip": {"mode": "multi"},
+          "legend": {"displayMode": "table", "placement": "right", "calcs": ["lastNotNull"]}
+        }
+      },
+      {
+        "id": 3,
+        "title": "Data Drift Score",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "targets": [
+          {
+            "expr": "fraud_model_data_drift_score{environment=\"$environment\", model_version=~\"$model_version\"}",
+            "legendFormat": "Overall Drift"
+          },
+          {
+            "expr": "fraud_model_feature_drift_score{environment=\"$environment\", model_version=~\"$model_version\"}",
+            "legendFormat": "{{feature_name}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "none",
+            "custom": {
+              "drawStyle": "line",
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "thresholdsStyle": {"mode": "line"}
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 0.15},
+                {"color": "red", "value": 0.3}
+              ]
+            }
+          }
+        },
+        "options": {
+          "tooltip": {"mode": "multi"},
+          "legend": {"displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "max"]}
+        }
+      },
+      {
+        "id": 4,
+        "title": "Model Accuracy by Segment",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "targets": [
+          {
+            "expr": "fraud_model_accuracy_by_segment{environment=\"$environment\", model_version=~\"$model_version\"}",
+            "legendFormat": "{{segment}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "min": 0,
+            "max": 1,
+            "custom": {
+              "drawStyle": "line",
+              "lineWidth": 2,
+              "fillOpacity": 5,
+              "showPoints": "auto"
+            },
+            "color": {"mode": "palette-classic"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 0.85},
+                {"color": "green", "value": 0.95}
+              ]
+            }
+          }
+        },
+        "options": {
+          "tooltip": {"mode": "multi"},
+          "legend": {"displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "min"]}
+        }
+      },
+      {
+        "id": 5,
+        "title": "False Positive / Negative Rates",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "targets": [
+          {
+            "expr": "sum(rate(fraud_model_predictions_total{environment=\"$environment\", model_version=~\"$model_version\", result=\"false_positive\"}[$time_range])) / sum(rate(fraud_model_predictions_total{environment=\"$environment\", model_version=~\"$model_version\", prediction=\"fraud\"}[$time_range]))",
+            "legendFormat": "False Positive Rate"
+          },
+          {
+            "expr": "sum(rate(fraud_model_predictions_total{environment=\"$environment\", model_version=~\"$model_version\", result=\"false_negative\"}[$time_range])) / sum(rate(fraud_model_predictions_total{environment=\"$environment\", model_version=~\"$model_version\", prediction=\"legitimate\"}[$time_range]))",
+            "legendFormat": "False Negative Rate"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "min": 0,
+            "max": 1,
+            "custom": {
+              "drawStyle": "line",
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "thresholdsStyle": {"mode": "area"}
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 0.05},
+                {"color": "red", "value": 0.1}
+              ]
+            }
+          },
+          "overrides": [
+            {"matcher": {"id": "byName", "options": "False Positive Rate"}, "properties": [{"id": "color", "value": {"fixedColor": "orange", "mode": "fixed"}}]},
+            {"matcher": {"id": "byName", "options": "False Negative Rate"}, "properties": [{"id": "color", "value": {"fixedColor": "red", "mode": "fixed"}}]}
+          ]
+        },
+        "options": {
+          "tooltip": {"mode": "multi"},
+          "legend": {"displayMode": "list", "placement": "bottom"}
+        }
+      },
+      {
+        "id": 6,
+        "title": "Inference Latency",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(fraud_model_inference_latency_seconds_bucket{environment=\"$environment\", model_version=~\"$model_version\"}[$time_range]))",
+            "legendFormat": "p50"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(fraud_model_inference_latency_seconds_bucket{environment=\"$environment\", model_version=~\"$model_version\"}[$time_range]))",
+            "legendFormat": "p95"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(fraud_model_inference_latency_seconds_bucket{environment=\"$environment\", model_version=~\"$model_version\"}[$time_range]))",
+            "legendFormat": "p99"
+          },
+          {
+            "expr": "rate(fraud_model_inference_latency_seconds_sum{environment=\"$environment\", model_version=~\"$model_version\"}[$time_range]) / rate(fraud_model_inference_latency_seconds_count{environment=\"$environment\", model_version=~\"$model_version\"}[$time_range])",
+            "legendFormat": "avg"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "custom": {
+              "drawStyle": "line",
+              "lineWidth": 2,
+              "fillOpacity": 5,
+              "showPoints": "auto"
+            }
+          },
+          "overrides": [
+            {"matcher": {"id": "byName", "options": "p99"}, "properties": [{"id": "color", "value": {"fixedColor": "red", "mode": "fixed"}}]},
+            {"matcher": {"id": "byName", "options": "p95"}, "properties": [{"id": "color", "value": {"fixedColor": "orange", "mode": "fixed"}}]},
+            {"matcher": {"id": "byName", "options": "p50"}, "properties": [{"id": "color", "value": {"fixedColor": "green", "mode": "fixed"}}]},
+            {"matcher": {"id": "byName", "options": "avg"}, "properties": [{"id": "color", "value": {"fixedColor": "blue", "mode": "fixed"}}, {"id": "custom.lineStyle", "value": {"dash": [10, 10], "fill": "dash"}}]}
+          ]
+        },
+        "options": {
+          "tooltip": {"mode": "multi"},
+          "legend": {"displayMode": "list", "placement": "bottom"}
+        }
+      }
+    ]
+  }
+}
