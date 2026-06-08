@@ -19,7 +19,9 @@ import {
   CaseStats,
   ClientConfig,
   CreateCaseInput,
+  CreateRuleInput,
   Decision,
+  DecisionResult,
   DriftHistoryResponse,
   DriftReport,
   FeedbackEntry,
@@ -28,12 +30,21 @@ import {
   FeedbackStats,
   HealthStatus,
   ModelInfo,
+  Rule,
+  RuleFilters,
+  RuleListResponse,
   ScoredTransaction,
   TransactionFilters,
   TransactionInput,
   TransactionSearchResponse,
   TransactionStats,
   UpdateCaseInput,
+  UpdateRuleInput,
+  WebSocketConfig,
+  WebSocketEvent,
+  WebSocketEventHandler,
+  WebSocketEventType,
+  WebSocketStateChangeHandler,
 } from "./types.js";
 
 // ---------------------------------------------------------------------------
@@ -515,6 +526,139 @@ export class FraudClient {
   }
 
   // -------------------------------------------------------------------------
+  // Rules
+  // -------------------------------------------------------------------------
+
+  /**
+   * Create a new fraud detection rule.
+   *
+   * @example
+   * ```ts
+   * const rule = await client.createRule({
+   *   name: "High-value transfer block",
+   *   conditions: [
+   *     { field: "amount", operator: "gte", value: 50000 },
+   *     { field: "transaction_type", operator: "eq", value: "transfer" },
+   *   ],
+   *   action: "block",
+   *   priority: 10,
+   * });
+   * ```
+   */
+  async createRule(input: CreateRuleInput): Promise<Rule> {
+    return this._request<Rule>("POST", "/api/v1/rules", { body: input });
+  }
+
+  /**
+   * Get a single rule by ID.
+   */
+  async getRule(ruleId: string): Promise<Rule> {
+    return this._request<Rule>(
+      "GET",
+      `/api/v1/rules/${encodeURIComponent(ruleId)}`
+    );
+  }
+
+  /**
+   * List rules with optional filtering.
+   */
+  async listRules(filters: RuleFilters = {}): Promise<RuleListResponse> {
+    return this._request<RuleListResponse>("GET", "/api/v1/rules", {
+      query: filters as Record<string, unknown>,
+    });
+  }
+
+  /**
+   * Update an existing rule.
+   */
+  async updateRule(ruleId: string, update: UpdateRuleInput): Promise<Rule> {
+    return this._request<Rule>(
+      "PATCH",
+      `/api/v1/rules/${encodeURIComponent(ruleId)}`,
+      { body: update }
+    );
+  }
+
+  /**
+   * Delete a rule by ID.
+   */
+  async deleteRule(ruleId: string): Promise<void> {
+    await this._request<Record<string, never>>(
+      "DELETE",
+      `/api/v1/rules/${encodeURIComponent(ruleId)}`
+    );
+  }
+
+  // -------------------------------------------------------------------------
+  // Decision
+  // -------------------------------------------------------------------------
+
+  /**
+   * Get the final decision for a transaction, including rules triggered
+   * and model score. This endpoint combines ML scoring with rule evaluation.
+   *
+   * @example
+   * ```ts
+   * const decision = await client.getDecision("txn-abc123");
+   * console.log(decision.decision, decision.rules_triggered);
+   * ```
+   */
+  async getDecision(transactionId: string): Promise<DecisionResult> {
+    return this._request<DecisionResult>(
+      "GET",
+      `/api/v1/decisions/${encodeURIComponent(transactionId)}`
+    );
+  }
+
+  // -------------------------------------------------------------------------
+  // Convenience aliases (match requested method names)
+  // -------------------------------------------------------------------------
+
+  /**
+   * Alias for {@link score}. Score a single transaction.
+   */
+  async scoreTransaction(
+    transaction: TransactionInput
+  ): Promise<ScoredTransaction> {
+    return this.score(transaction);
+  }
+
+  /**
+   * Alias for {@link searchTransactions}. List/search transactions.
+   */
+  async listTransactions(
+    filters: TransactionFilters = {}
+  ): Promise<TransactionSearchResponse> {
+    return this.searchTransactions(filters);
+  }
+
+  // -------------------------------------------------------------------------
+  // WebSocket — real-time events
+  // -------------------------------------------------------------------------
+
+  /**
+   * Create a WebSocket connection for real-time fraud events.
+   * Returns a {@link FraudWebSocket} instance that manages the connection
+   * lifecycle including automatic reconnection.
+   *
+   * @example
+   * ```ts
+   * const ws = client.connectWebSocket({ orgId: "org-123" });
+   * ws.on("transaction.flagged", (event) => {
+   *   console.log("Flagged!", event.payload);
+   * });
+   * ws.connect();
+   * ```
+   */
+  connectWebSocket(config: WebSocketConfig): FraudWebSocket {
+    const wsUrl = config.url ?? this._baseUrl.replace(/^http/, "ws");
+    return new FraudWebSocket({
+      ...config,
+      url: wsUrl,
+    });
+  }
+
+  // -------------------------------------------------------------------------
   // Private: HTTP transport
   // -------------------------------------------------------------------------
 
@@ -646,5 +790,211 @@ export class FraudClient {
     }
 
     throw lastError;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// WebSocket client for real-time events
+// ---------------------------------------------------------------------------
+
+/**
+ * Manages a WebSocket connection to the fraud detection event stream.
+ * Supports automatic reconnection with exponential backoff, heartbeats,
+ * and typed event handlers.
+ *
+ * @example
+ * ```ts
+ * const ws = new FraudWebSocket({ orgId: "org-123" });
+ * ws.on("transaction.scored", (event) => console.log(event));
+ * ws.onStateChange((state) => console.log("WS state:", state));
+ * ws.connect();
+ * // later...
+ * ws.disconnect();
+ * ```
+ */
+export class FraudWebSocket {
+  private readonly _url: string;
+  private readonly _orgId: string;
+  private readonly _userId: string;
+  private readonly _autoReconnect: boolean;
+  private readonly _maxReconnectAttempts: number;
+  private readonly _reconnectDelay: number;
+  private readonly _pingInterval: number;
+
+  private _ws: WebSocket | null = null;
+  private _reconnectAttempts = 0;
+  private _pingTimer: ReturnType<typeof setInterval> | null = null;
+  private _reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private _intentionalClose = false;
+
+  private readonly _handlers: Map<string, Set<WebSocketEventHandler>> =
+    new Map();
+  private readonly _wildcardHandlers: Set<WebSocketEventHandler> = new Set();
+  private readonly _stateHandlers: Set<WebSocketStateChangeHandler> =
+    new Set();
+
+  constructor(config: WebSocketConfig) {
+    const baseWsUrl = (config.url ?? "ws://localhost:8000").replace(/\/$/, "");
+    this._orgId = config.orgId;
+    this._userId = config.userId ?? "anonymous";
+    this._url = `${baseWsUrl}/ws/events?org_id=${encodeURIComponent(this._orgId)}&user_id=${encodeURIComponent(this._userId)}`;
+    this._autoReconnect = config.autoReconnect ?? true;
+    this._maxReconnectAttempts = config.maxReconnectAttempts ?? 10;
+    this._reconnectDelay = config.reconnectDelay ?? 1_000;
+    this._pingInterval = config.pingInterval ?? 30_000;
+  }
+
+  /**
+   * Open the WebSocket connection.
+   * Safe to call multiple times — will no-op if already connected.
+   */
+  connect(): void {
+    if (this._ws && this._ws.readyState === WebSocket.OPEN) return;
+
+    this._intentionalClose = false;
+    this._emitState("connecting");
+
+    this._ws = new WebSocket(this._url);
+
+    this._ws.onopen = () => {
+      this._reconnectAttempts = 0;
+      this._emitState("connected");
+      this._startPing();
+    };
+
+    this._ws.onmessage = (event: MessageEvent) => {
+      if (event.data === "pong") return;
+
+      try {
+        const parsed = JSON.parse(event.data as string) as WebSocketEvent;
+        this._dispatch(parsed);
+      } catch {
+        // Ignore non-JSON messages
+      }
+    };
+
+    this._ws.onclose = () => {
+      this._stopPing();
+      this._emitState("disconnected");
+
+      if (!this._intentionalClose && this._autoReconnect) {
+        this._scheduleReconnect();
+      }
+    };
+
+    this._ws.onerror = () => {
+      // onclose will fire after onerror, reconnect is handled there
+    };
+  }
+
+  /**
+   * Gracefully close the WebSocket connection.
+   * Disables automatic reconnection.
+   */
+  disconnect(): void {
+    this._intentionalClose = true;
+    this._stopPing();
+    this._clearReconnect();
+    if (this._ws) {
+      this._ws.close();
+      this._ws = null;
+    }
+  }
+
+  /**
+   * Register a handler for a specific event type.
+   * Use `"*"` to listen for all event types.
+   *
+   * @returns An unsubscribe function.
+   */
+  on<T = unknown>(
+    eventType: WebSocketEventType | "*",
+    handler: WebSocketEventHandler<T>
+  ): () => void {
+    const h = handler as WebSocketEventHandler;
+    if (eventType === "*") {
+      this._wildcardHandlers.add(h);
+      return () => {
+        this._wildcardHandlers.delete(h);
+      };
+    }
+
+    if (!this._handlers.has(eventType)) {
+      this._handlers.set(eventType, new Set());
+    }
+    this._handlers.get(eventType)!.add(h);
+
+    return () => {
+      this._handlers.get(eventType)?.delete(h);
+    };
+  }
+
+  /**
+   * Register a handler for WebSocket connection state changes.
+   *
+   * @returns An unsubscribe function.
+   */
+  onStateChange(handler: WebSocketStateChangeHandler): () => void {
+    this._stateHandlers.add(handler);
+    return () => {
+      this._stateHandlers.delete(handler);
+    };
+  }
+
+  /** Returns true if the WebSocket is currently open. */
+  get connected(): boolean {
+    return this._ws?.readyState === WebSocket.OPEN;
+  }
+
+  // -- Private helpers --
+
+  private _dispatch(event: WebSocketEvent): void {
+    const typeHandlers = this._handlers.get(event.event_type);
+    if (typeHandlers) {
+      for (const h of typeHandlers) h(event);
+    }
+    for (const h of this._wildcardHandlers) h(event);
+  }
+
+  private _emitState(
+    state: "connecting" | "connected" | "disconnected" | "reconnecting"
+  ): void {
+    for (const h of this._stateHandlers) h(state);
+  }
+
+  private _startPing(): void {
+    this._stopPing();
+    this._pingTimer = setInterval(() => {
+      if (this._ws?.readyState === WebSocket.OPEN) {
+        this._ws.send("ping");
+      }
+    }, this._pingInterval);
+  }
+
+  private _stopPing(): void {
+    if (this._pingTimer) {
+      clearInterval(this._pingTimer);
+      this._pingTimer = null;
+    }
+  }
+
+  private _scheduleReconnect(): void {
+    if (this._reconnectAttempts >= this._maxReconnectAttempts) return;
+
+    this._reconnectAttempts++;
+    const delay = Math.min(
+      30_000,
+      this._reconnectDelay * 2 ** (this._reconnectAttempts - 1) * (0.5 + Math.random() * 0.5)
+    );
+
+    this._emitState("reconnecting");
+    this._reconnectTimer = setTimeout(() => this.connect(), delay);
+  }
+
+  private _clearReconnect(): void {
+    if (this._reconnectTimer) {
+      clearTimeout(this._reconnectTimer);
+      this._reconnectTimer = null;
+    }
   }
 }
