@@ -8,6 +8,7 @@ analytics and model training.
 from __future__ import annotations
 
 import random
+from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import Final
@@ -357,7 +358,7 @@ def generate_merchant_collusion(user: UserProfile) -> list[Transaction]:
 # Public API
 # ---------------------------------------------------------------------------
 
-FRAUD_GENERATORS: Final[list[callable]] = [
+FRAUD_GENERATORS: Final[list[Callable[[UserProfile], list[Transaction]]]] = [
     generate_card_testing,
     generate_account_takeover,
     generate_geo_anomaly,
