@@ -10,6 +10,8 @@ import httpx
 
 from sdk.models import BatchResult, CaseInfo, ScoringResult, SearchResult
 
+__all__ = ["FraudClient", "FraudClientError"]
+
 
 class FraudClientError(Exception):
     """Base exception for SDK errors."""
