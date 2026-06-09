@@ -445,6 +445,7 @@ class VelocityEngine:
         await pipe.execute()
 
     def stats(self) -> dict[str, Any]:
+        """Return a summary of the engine's current configuration."""
         return {
             "thresholds_configured": len(self._thresholds),
             "key_prefix": self._key_prefix,
