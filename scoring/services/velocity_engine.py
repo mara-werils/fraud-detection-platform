@@ -24,6 +24,18 @@ from typing import Any
 
 import structlog
 from prometheus_client import Counter, Histogram
+from redis.asyncio import Redis
+
+__all__ = [
+    "Dimension",
+    "VelocityType",
+    "TimeWindow",
+    "VelocityThreshold",
+    "VelocityResult",
+    "VelocityReport",
+    "VelocityEngine",
+    "DEFAULT_THRESHOLDS",
+]
 
 logger = structlog.get_logger(__name__)
 
