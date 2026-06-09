@@ -12,6 +12,8 @@ import structlog
 
 from shared.schemas import AlertEvent, AlertSeverity
 
+__all__ = ["EmailNotifier"]
+
 logger = structlog.get_logger(__name__)
 
 
