@@ -68,3 +68,7 @@ class ConfigurationError(ScoringError):
 
 class DriftDetectionError(ScoringError):
     """Raised when drift detection analysis fails."""
+
+
+class SanctionsMatchError(ScoringError):
+    """Raised when a transaction matches a sanctions list entry."""
