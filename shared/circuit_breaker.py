@@ -233,6 +233,12 @@ class CircuitBreakerRegistry:
         """Return metrics for all circuit breakers."""
         return [cb.metrics for cb in self._breakers.values()]
 
+    def __len__(self) -> int:
+        return len(self._breakers)
+
+    def __repr__(self) -> str:
+        return f"CircuitBreakerRegistry(breakers={list(self._breakers)!r})"
+
 
 # Global registry
 circuit_registry = CircuitBreakerRegistry()
