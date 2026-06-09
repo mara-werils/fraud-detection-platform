@@ -86,6 +86,9 @@ class InMemoryTTLCache:
             del self._store[k]
         return len(expired)
 
+    def __len__(self) -> int:
+        return len(self._store)
+
 
 # ---------------------------------------------------------------------------
 # Redis backend
