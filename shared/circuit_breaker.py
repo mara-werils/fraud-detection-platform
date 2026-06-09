@@ -16,6 +16,14 @@ from typing import Any, TypeVar
 
 import structlog
 
+__all__ = [
+    "CircuitState",
+    "CircuitBreakerError",
+    "CircuitBreaker",
+    "CircuitBreakerRegistry",
+    "circuit_registry",
+]
+
 logger = structlog.get_logger(__name__)
 
 T = TypeVar("T")
