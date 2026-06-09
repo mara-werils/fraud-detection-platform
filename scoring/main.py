@@ -227,13 +227,14 @@ def create_app() -> FastAPI:
     Returns:
         Fully configured FastAPI instance with all routers and middleware.
     """
+    _cfg = ScoringConfig()
     app = FastAPI(
         title="Fraud Detection Platform",
         description=(
             "Real-time ML-powered fraud detection platform with ensemble scoring, "
             "case management, drift detection, and analyst workflows."
         ),
-        version="1.1.0",
+        version=_cfg.service_version,
         lifespan=lifespan,
     )
 
