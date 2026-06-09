@@ -300,6 +300,7 @@ class FraudClient:
     def health(self) -> dict[str, Any]:
         """Check service health."""
         resp = self._client.get("/health")
+        self._check_response(resp)
         return resp.json()
 
     def model_info(self) -> dict[str, Any]:
