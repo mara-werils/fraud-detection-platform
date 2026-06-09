@@ -5,11 +5,22 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from decimal import Decimal
 from enum import StrEnum
-from typing import Any
+from typing import Any, Self
 from uuid import UUID, uuid4
 
 import orjson
 from pydantic import BaseModel, Field
+
+__all__ = [
+    "TransactionType",
+    "AlertSeverity",
+    "AlertStatus",
+    "BaseSchema",
+    "Transaction",
+    "FeatureVector",
+    "ScoredTransaction",
+    "AlertEvent",
+]
 
 
 def _orjson_dumps(v: Any, *, default: Any) -> str:
