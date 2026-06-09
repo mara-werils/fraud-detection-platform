@@ -53,6 +53,9 @@ class FraudClient:
             timeout=timeout,
         )
 
+    def __repr__(self) -> str:
+        return f"FraudClient(base_url={str(self._client.base_url)!r})"
+
     def close(self) -> None:
         """Close the HTTP client."""
         self._client.close()
