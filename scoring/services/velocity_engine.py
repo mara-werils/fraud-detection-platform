@@ -204,7 +204,7 @@ class VelocityEngine:
 
     def __init__(
         self,
-        redis,
+        redis: Redis,
         thresholds: list[VelocityThreshold] | None = None,
         key_prefix: str = "vel:",
         ttl_buffer: int = 3600,
