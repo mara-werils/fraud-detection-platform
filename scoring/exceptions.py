@@ -29,6 +29,10 @@ class ScoringError(Exception):
         super().__init__(message)
         self.details = details or {}
 
+    def __repr__(self) -> str:
+        details_repr = f", details={self.details!r}" if self.details else ""
+        return f"{type(self).__name__}({str(self)!r}{details_repr})"
+
 
 class ModelNotLoadedError(ScoringError):
     """Raised when a scoring model is not available."""
