@@ -79,3 +79,8 @@ def mask_card_numbers(text: str) -> str:
 def mask_emails(text: str) -> str:
     """Replace email addresses in free text with masked versions."""
     return _EMAIL_RE.sub(lambda m: mask_value(m.group()), text)
+
+
+def mask_ip_addresses(text: str) -> str:
+    """Replace IPv4 addresses in free text with masked versions."""
+    return _IP_RE.sub(lambda m: mask_value(m.group()), text)
