@@ -72,3 +72,7 @@ class DriftDetectionError(ScoringError):
 
 class SanctionsMatchError(ScoringError):
     """Raised when a transaction matches a sanctions list entry."""
+
+
+class EntityBlockedError(ScoringError):
+    """Raised when a transaction involves a blocked entity (user, card, IP, etc.)."""
