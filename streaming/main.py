@@ -234,7 +234,7 @@ async def run() -> None:
     try:
         await pipeline.start()
     except KeyboardInterrupt:
-        pass
+        await logger.ainfo("streaming_pipeline_interrupted")
     finally:
         await pipeline.stop()
 
