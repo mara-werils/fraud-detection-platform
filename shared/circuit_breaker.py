@@ -200,6 +200,9 @@ class CircuitBreaker:
             new_state=new_state.value,
         )
 
+    def __repr__(self) -> str:
+        return f"CircuitBreaker(name={self.name!r}, state={self._state.value!r})"
+
     def reset(self) -> None:
         """Manually reset the circuit to CLOSED."""
         self._transition(CircuitState.CLOSED)
