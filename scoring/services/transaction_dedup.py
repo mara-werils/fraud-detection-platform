@@ -23,6 +23,15 @@ from typing import Any, Protocol
 
 import structlog
 
+__all__ = [
+    "DedupResult",
+    "CacheBackend",
+    "InMemoryTTLCache",
+    "RedisCacheBackend",
+    "TransactionDedup",
+    "DEFAULT_TTL_SECONDS",
+]
+
 logger = structlog.get_logger(__name__)
 
 
