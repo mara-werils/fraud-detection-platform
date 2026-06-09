@@ -73,7 +73,7 @@ def retry(
                     )
                     await asyncio.sleep(actual_delay)
                     delay *= backoff_factor
-            raise last_exc  # type: ignore[misc]
+            raise last_exc  # pragma: no cover — loop always raises on final attempt
 
         return wrapper
 
