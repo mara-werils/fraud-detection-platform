@@ -99,6 +99,11 @@ class AlertDeduplicator:
             except Exception:
                 await logger.aexception("dedup_cleanup_error")
 
+    @property
+    def size(self) -> int:
+        """Return the number of active dedup entries currently tracked."""
+        return len(self._seen)
+
     async def _cleanup(self) -> None:
         """Remove expired entries from the dedup map."""
         now = time.monotonic()
