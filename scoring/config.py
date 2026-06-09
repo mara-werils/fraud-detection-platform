@@ -112,3 +112,17 @@ class ScoringConfig(BaseSettings):
         if v < 1:
             raise ValueError("redis_max_connections must be >= 1")
         return v
+
+    @field_validator("jwt_secret_key")
+    @classmethod
+    def validate_jwt_secret(cls, v: str) -> str:
+        if v == "change-me-in-production-use-strong-secret":
+            import warnings
+            warnings.warn(
+                "jwt_secret_key is set to the default insecure value. "
+                "Set JWT_SECRET_KEY in your environment for production.",
+                stacklevel=2,
+            )
+        if len(v) < 32:
+            raise ValueError("jwt_secret_key must be at least 32 characters")
+        return v
