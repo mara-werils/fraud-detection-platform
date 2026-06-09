@@ -104,6 +104,13 @@ class AlertDeduplicator:
         """Return the number of active dedup entries currently tracked."""
         return len(self._seen)
 
+    async def reset_all(self) -> None:
+        """Clear all tracked entries, resetting dedup state."""
+        async with self._lock:
+            count = len(self._seen)
+            self._seen.clear()
+        await logger.ainfo("dedup_reset", cleared_count=count)
+
     async def _cleanup(self) -> None:
         """Remove expired entries from the dedup map."""
         now = time.monotonic()
