@@ -33,6 +33,7 @@ SENSITIVE_FIELDS = frozenset({
     "phone",
     "phone_number",
     "account_number",
+    "ip_address",
 })
 
 # Regex patterns for inline PII detection
