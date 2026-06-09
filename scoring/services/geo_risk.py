@@ -21,6 +21,16 @@ import structlog
 from prometheus_client import Counter, Histogram
 from pydantic import BaseModel, Field
 
+__all__ = [
+    "GeoRiskLevel",
+    "GeoLocation",
+    "TransactionGeoData",
+    "ImpossibleTravelResult",
+    "GeoRiskAssessment",
+    "GeoRiskService",
+    "get_geo_risk_service",
+]
+
 logger = structlog.get_logger(__name__)
 
 # ── Prometheus metrics ────────────────────────────────────────────────────────
