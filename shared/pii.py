@@ -9,6 +9,15 @@ from __future__ import annotations
 import re
 from typing import Any
 
+__all__ = [
+    "SENSITIVE_FIELDS",
+    "mask_value",
+    "mask_dict",
+    "mask_card_numbers",
+    "mask_emails",
+    "mask_ip_addresses",
+]
+
 # Fields that should be masked in log payloads
 SENSITIVE_FIELDS = frozenset({
     "card_number",
