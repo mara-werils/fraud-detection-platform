@@ -17,6 +17,8 @@ from typing import Any, TypeVar
 
 import structlog
 
+__all__ = ["retry"]
+
 logger = structlog.get_logger(__name__)
 
 T = TypeVar("T")
