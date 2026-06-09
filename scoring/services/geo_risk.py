@@ -154,6 +154,10 @@ _MIN_TIME_GAP_SECONDS: float = 60.0
 # Earth's mean radius in kilometres.
 _EARTH_RADIUS_KM: float = 6371.0
 
+# Waking-hours window used for timezone anomaly detection.
+_WAKING_HOURS_START: int = 4
+_WAKING_HOURS_END: int = 24
+
 
 # ── Enumerations ──────────────────────────────────────────────────────────────
 
@@ -436,7 +440,7 @@ class GeoRiskService:
         for offset_hours in offsets:
             local_time = ts + timedelta(hours=offset_hours)
             local_hour = local_time.hour
-            if 4 <= local_hour < 24:
+            if _WAKING_HOURS_START <= local_hour < _WAKING_HOURS_END:
                 return False  # at least one zone is within waking hours
 
         return True
