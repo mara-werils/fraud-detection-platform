@@ -412,7 +412,7 @@ class GeoRiskService:
 
     def is_cross_border(self, country_a: str, country_b: str) -> bool:
         """Return True if *country_a* and *country_b* are different countries."""
-        return country_a.upper().strip() != country_b.upper().strip()
+        return country_a.upper() != country_b.upper()
 
     def detect_timezone_anomaly(
         self,
