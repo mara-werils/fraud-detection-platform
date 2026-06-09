@@ -6,6 +6,21 @@ can catch specific problems and API handlers can map them to HTTP status codes.
 
 from __future__ import annotations
 
+__all__ = [
+    "ScoringError",
+    "ModelNotLoadedError",
+    "ModelScoringError",
+    "FeatureRetrievalError",
+    "InvalidTransactionError",
+    "RateLimitExceededError",
+    "CaseNotFoundError",
+    "WebhookDeliveryError",
+    "ConfigurationError",
+    "DriftDetectionError",
+    "SanctionsMatchError",
+    "EntityBlockedError",
+]
+
 
 class ScoringError(Exception):
     """Base exception for all scoring service errors."""
