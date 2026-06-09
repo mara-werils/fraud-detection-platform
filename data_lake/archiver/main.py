@@ -339,7 +339,7 @@ async def run() -> None:
     try:
         await archiver.start()
     except KeyboardInterrupt:
-        pass
+        await logger.ainfo("archiver_interrupted")
     finally:
         await archiver.stop()
 
