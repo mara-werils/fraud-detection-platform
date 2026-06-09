@@ -11,6 +11,8 @@ import structlog
 
 from shared.schemas import FeatureVector, Transaction
 
+__all__ = ["OnlineFeatureStore"]
+
 logger = structlog.get_logger(__name__)
 
 # Sliding window durations in seconds
