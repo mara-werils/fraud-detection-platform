@@ -8,6 +8,8 @@ from uuid import UUID
 
 import structlog
 
+__all__ = ["AlertDeduplicator", "get_dedup_metrics"]
+
 logger = structlog.get_logger(__name__)
 
 # Metrics
