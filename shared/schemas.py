@@ -66,7 +66,7 @@ class BaseSchema(BaseModel):
         return orjson.dumps(self.model_dump(mode="json"))
 
     @classmethod
-    def from_json_bytes(cls, data: bytes) -> BaseSchema:
+    def from_json_bytes(cls, data: bytes) -> Self:
         return cls.model_validate(orjson.loads(data))
 
 
