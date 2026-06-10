@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+__all__ = ["AlertConfig"]
+
 
 class AlertConfig(BaseSettings):
     """Configuration for the alert service."""
