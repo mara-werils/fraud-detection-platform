@@ -9,6 +9,10 @@ from uuid import UUID
 import redis.asyncio as aioredis
 import structlog
 
+__all__ = [
+    "WindowedAggregator",
+]
+
 logger = structlog.get_logger(__name__)
 
 # Window definitions: name -> duration in seconds
