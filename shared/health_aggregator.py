@@ -118,6 +118,7 @@ class HealthAggregator:
         logger.info("health_probe_registered", component=name, critical=critical)
 
     def unregister(self, name: str) -> None:
+        """Remove a previously registered probe; a no-op if unknown."""
         self._probes.pop(name, None)
 
     # ------------------------------------------------------------------
