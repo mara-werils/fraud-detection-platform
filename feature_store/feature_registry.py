@@ -7,6 +7,15 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 
+__all__ = [
+    "FeatureDtype",
+    "FeatureSource",
+    "FeatureDefinition",
+    "get_feature_names",
+    "get_feature_version",
+    "get_feature_definitions",
+]
+
 
 class FeatureDtype(StrEnum):
     INT = "int"
