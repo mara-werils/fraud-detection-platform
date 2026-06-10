@@ -20,6 +20,13 @@ import numpy as np
 import pandas as pd
 import structlog
 
+__all__ = [
+    "FeatureImportanceTracker",
+    "get_importance_tracker",
+    "get_feature_names",
+    "engineer_features",
+]
+
 log = structlog.get_logger(__name__)
 
 
