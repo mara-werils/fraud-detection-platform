@@ -1,3 +1,7 @@
+
+__all__ = [
+    "SimulatorConfig",
+]
 """Simulator-specific configuration loaded from environment variables."""
 
 from __future__ import annotations
