@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+__all__ = [
+    "FeatureStoreConfig",
+]
+
 
 class FeatureStoreConfig(BaseSettings):
     """Configuration for the Feature Store service."""
