@@ -17,6 +17,12 @@ import time
 
 import structlog
 
+__all__ = [
+    "is_draining",
+    "GracefulShutdownManager",
+    "DrainMiddleware",
+]
+
 logger = structlog.get_logger(__name__)
 
 _DRAINING = False
