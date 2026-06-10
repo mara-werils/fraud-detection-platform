@@ -9,6 +9,16 @@ from typing import Any
 
 import structlog
 
+__all__ = [
+    "GeoInfo",
+    "DeviceInfo",
+    "EnrichmentResult",
+    "GeoIPResolver",
+    "parse_device_info",
+    "compute_merchant_risk",
+    "TransactionEnricher",
+]
+
 logger = structlog.get_logger(__name__)
 
 # ---------------------------------------------------------------------------
