@@ -12,6 +12,12 @@ from uuid import UUID, uuid4
 
 from shared.schemas import Transaction, TransactionType
 
+__all__ = [
+    "UserProfile",
+    "build_user_pool",
+    "generate_legitimate_transaction",
+]
+
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
