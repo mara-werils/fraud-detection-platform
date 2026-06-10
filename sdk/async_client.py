@@ -14,6 +14,12 @@ import httpx
 
 from sdk.models import BatchResult, CaseInfo, ScoringResult, SearchResult
 
+__all__ = [
+    "AsyncFraudClientError",
+    "RateLimitError",
+    "AsyncFraudClient",
+]
+
 logger = logging.getLogger("fraud_sdk.async_client")
 
 # Default retry / backoff settings
