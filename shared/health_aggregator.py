@@ -36,6 +36,8 @@ __all__ = [
 
 
 class HealthStatus(StrEnum):
+    """Overall health state for a component or the whole system."""
+
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     UNHEALTHY = "unhealthy"
