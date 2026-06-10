@@ -15,6 +15,10 @@ import asyncio
 
 import structlog
 
+__all__ = [
+    "TenantClickHouseStore",
+]
+
 logger = structlog.get_logger(__name__)
 
 # TTL days per plan
