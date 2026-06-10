@@ -26,6 +26,14 @@ import structlog
 
 logger = structlog.get_logger(__name__)
 
+__all__ = [
+    "HealthStatus",
+    "ComponentHealth",
+    "SystemHealth",
+    "HealthProbe",
+    "HealthAggregator",
+]
+
 
 class HealthStatus(StrEnum):
     HEALTHY = "healthy"
