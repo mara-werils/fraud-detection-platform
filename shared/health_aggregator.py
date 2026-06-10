@@ -63,6 +63,7 @@ class SystemHealth:
     checked_at: float = field(default_factory=time.time)
 
     def to_dict(self) -> dict[str, Any]:
+        """Serialize the system health report to a JSON-friendly dict."""
         return {
             "status": self.status.value,
             "checked_at": self.checked_at,
