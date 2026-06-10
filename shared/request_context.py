@@ -73,6 +73,7 @@ def get_request_id() -> str:
 
 
 def get_tenant_id() -> str | None:
+    """Return the current tenant ID, or *None* outside a request."""
     ctx = _current_context.get()
     return ctx.tenant_id if ctx else None
 
