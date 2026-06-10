@@ -1,13 +1,13 @@
-
-__all__ = [
-    "ScoringConfig",
-]
 """Scoring service configuration."""
 
 from __future__ import annotations
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+__all__ = [
+    "ScoringConfig",
+]
 
 
 class ScoringConfig(BaseSettings):
