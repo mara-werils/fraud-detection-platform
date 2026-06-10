@@ -13,6 +13,10 @@ from clickhouse_connect.driver.client import Client as CHClient
 
 from shared.schemas import FeatureVector, Transaction
 
+__all__ = [
+    "OfflineFeatureStore",
+]
+
 logger = structlog.get_logger(__name__)
 
 _CREATE_TRANSACTIONS_TABLE = """
