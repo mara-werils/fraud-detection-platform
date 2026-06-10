@@ -1,12 +1,12 @@
-
-__all__ = [
-    "StreamingConfig",
-]
 """Configuration for the streaming pipeline service."""
 
 from __future__ import annotations
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+__all__ = [
+    "StreamingConfig",
+]
 
 
 class StreamingConfig(BaseSettings):
