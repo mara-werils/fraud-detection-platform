@@ -13,6 +13,10 @@ import structlog
 
 from shared.schemas import AlertEvent, AlertSeverity
 
+__all__ = [
+    "WebhookNotifier",
+]
+
 logger = structlog.get_logger(__name__)
 
 
