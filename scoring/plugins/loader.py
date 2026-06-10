@@ -39,6 +39,11 @@ import structlog
 from scoring.plugins.base import ScorerPlugin
 from scoring.plugins.registry import PluginRegistry
 
+__all__ = [
+    "PluginLoadError",
+    "PluginLoader",
+]
+
 logger = structlog.get_logger(__name__)
 
 
