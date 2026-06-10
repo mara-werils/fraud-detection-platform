@@ -28,6 +28,17 @@ from simulator.generators import (
     build_user_pool,
 )
 
+__all__ = [
+    "FraudScenario",
+    "CardTestingAttack",
+    "AccountTakeoverSimulation",
+    "FriendlyFraudSimulation",
+    "SyntheticIdentityFraud",
+    "MoneyMuleChain",
+    "RefundAbuseSimulation",
+    "MerchantCollusionSimulation",
+]
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
