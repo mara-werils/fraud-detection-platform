@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+__all__ = ["Settings"]
+
 
 class Settings(BaseSettings):
     """Central configuration for all fraud detection services."""
