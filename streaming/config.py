@@ -1,3 +1,7 @@
+
+__all__ = [
+    "StreamingConfig",
+]
 """Configuration for the streaming pipeline service."""
 
 from __future__ import annotations
