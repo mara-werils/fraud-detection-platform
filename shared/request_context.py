@@ -26,6 +26,17 @@ import structlog
 
 logger = structlog.get_logger(__name__)
 
+__all__ = [
+    "RequestContext",
+    "RequestContextMiddleware",
+    "get_context",
+    "get_request_id",
+    "get_tenant_id",
+    "set_context",
+    "clear_context",
+    "bind_to_structlog",
+]
+
 
 # ---------------------------------------------------------------------------
 # Context storage
