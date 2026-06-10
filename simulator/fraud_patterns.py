@@ -24,6 +24,15 @@ from simulator.generators import (
     _jitter_location,
 )
 
+__all__ = [
+    "generate_card_testing",
+    "generate_account_takeover",
+    "generate_geo_anomaly",
+    "generate_velocity_abuse",
+    "generate_merchant_collusion",
+    "generate_fraud_transactions",
+]
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
