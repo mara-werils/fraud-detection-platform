@@ -29,6 +29,10 @@ from prometheus_client import Counter, Gauge, Histogram
 from scoring.plugins.base import PluginInfo, PluginScore, ScorerPlugin
 from shared.schemas import FeatureVector, Transaction
 
+__all__ = [
+    "PluginRegistry",
+]
+
 logger = structlog.get_logger(__name__)
 
 # ---------------------------------------------------------------------------
