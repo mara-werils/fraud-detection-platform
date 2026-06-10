@@ -10,6 +10,14 @@ from uuid import uuid4
 
 import structlog
 
+__all__ = [
+    "get_correlation_id",
+    "set_correlation_id",
+    "new_correlation_id",
+    "setup_logging",
+    "get_logger",
+]
+
 _correlation_id: ContextVar[str] = ContextVar("correlation_id", default="")
 
 
