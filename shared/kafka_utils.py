@@ -14,6 +14,12 @@ from aiokafka.errors import KafkaConnectionError, KafkaError
 
 logger = structlog.get_logger(__name__)
 
+__all__ = [
+    "KafkaProducerWrapper",
+    "KafkaConsumerWrapper",
+    "setup_graceful_shutdown",
+]
+
 
 class KafkaProducerWrapper:
     """Async Kafka producer with retry logic and graceful shutdown."""
