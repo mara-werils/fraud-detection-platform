@@ -364,3 +364,6 @@ class CaseManager:
                 "by_priority": dict(by_priority),
                 "avg_resolution_hours": round(avg_resolution, 2),
             }
+
+
+__all__ = ["CaseEvent", "CaseManager", "CaseNote", "CasePriority", "CaseStatus", "FraudCase"]
