@@ -197,3 +197,6 @@ class TransactionStore:
         if score >= 0.5:
             return "REVIEW"
         return "ALLOW"
+
+
+__all__ = ["TransactionStore"]
