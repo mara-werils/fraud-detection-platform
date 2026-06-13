@@ -170,3 +170,6 @@ class RedisPoolManager:
             "pool_max_connections": self._pool.max_connections,
             "circuit_breaker": self._cb.stats(),
         }
+
+
+__all__ = ["CircuitBreaker", "CircuitState", "RedisPoolManager"]
