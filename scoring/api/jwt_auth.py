@@ -277,3 +277,6 @@ async def me(current_user: CurrentUser = Depends(require_user)):
         is_active=user.is_active,
         created_at=user.created_at or datetime.now(UTC),
     )
+
+
+__all__ = ["CurrentUser", "RegisterRequest", "TokenResponse", "UserResponse", "create_access_token", "create_refresh_token", "decode_token", "get_current_user", "hash_password", "require_user", "router", "verify_password"]
