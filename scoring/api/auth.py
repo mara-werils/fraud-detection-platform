@@ -144,3 +144,6 @@ async def require_api_key(
     request.state.api_key_rate_limit = record.rate_limit
 
     return record
+
+
+__all__ = ["APIKeyRecord", "generate_api_key", "register_api_key", "require_api_key", "validate_api_key"]
