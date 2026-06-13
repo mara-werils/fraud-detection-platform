@@ -167,3 +167,6 @@ async def list_stats(request: Request) -> dict[str, Any]:
     """Return a breakdown of active and expired entries by list type and entity type."""
     service = _get_service(request)
     return service.get_stats()
+
+
+__all__ = ["CheckEntityRequest", "ImportRequest", "RemoveEntryRequest", "router"]
