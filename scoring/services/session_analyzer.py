@@ -782,3 +782,6 @@ class SessionAnalyzer:
             if match:
                 result.append(rec)
         return result
+
+
+__all__ = ["EventType", "SessionAnalyzer", "SessionCluster", "SessionEvent", "SessionProfile", "VelocityCheck", "VelocityCheckConfig"]
