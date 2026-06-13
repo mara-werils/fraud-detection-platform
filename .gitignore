@@ -92,3 +92,9 @@ data/processed/
 # Logs
 *.log
 logs/
+
+# Graphify (codebase knowledge graph) — regenerated locally / via post-commit hook
+graphify-out/
+
+# Claude Code local config / worktrees
+.claude/

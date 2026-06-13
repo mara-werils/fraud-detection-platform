@@ -1,0 +1,35 @@
+# Graphify ignore — keep a pure-code corpus (no LLM API key required).
+# Docs, data, and binary assets are excluded so AST-only extraction stays free.
+
+# Docs / prose
+*.md
+*.rst
+*.txt
+docs/
+
+# Notebooks
+*.ipynb
+
+# Data / model artifacts
+*.csv
+*.parquet
+*.feather
+*.json
+*.jsonl
+*.yaml
+*.yml
+*.toml
+*.ini
+*.cfg
+
+# Images / binaries
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.ico
+*.pdf
+
+# Graphify's own output
+graphify-out/
