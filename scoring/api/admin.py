@@ -297,3 +297,6 @@ async def set_feature_flag(
     _FEATURE_FLAGS[flag_name] = enabled
     await logger.ainfo("feature_flag_changed", flag=flag_name, enabled=enabled, by=current_user.user_id)
     return {"flag": flag_name, "enabled": enabled}
+
+
+__all__ = ["ChangeRoleRequest", "OrgSuspendRequest", "router"]
