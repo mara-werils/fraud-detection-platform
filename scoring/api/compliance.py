@@ -317,3 +317,6 @@ async def schedule_compliance_checks(
         "scheduled_at": datetime.now(UTC).isoformat(),
         "message": f"Compliance checks for {std.value} scheduled with cron '{body.cron_expression}'",
     }
+
+
+__all__ = ["RunCheckResponse", "ScheduleRequest", "ScoreResponse", "router"]
