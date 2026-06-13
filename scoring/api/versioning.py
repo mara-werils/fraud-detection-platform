@@ -520,3 +520,6 @@ class APIVersionRouter:
             return wrapper
 
         return decorator
+
+
+__all__ = ["APIVersion", "APIVersionRouter", "DeprecationPolicy", "VersionNegotiator", "VersioningMiddleware", "add_pagination_envelope", "transform_v2_to_v1", "version_transform"]
