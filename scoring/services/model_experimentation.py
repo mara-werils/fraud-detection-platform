@@ -892,3 +892,6 @@ class ExperimentationService:
         if experiment is None:
             raise KeyError(f"Experiment '{experiment_id}' not found")
         return experiment
+
+
+__all__ = ["AllocationStrategy", "Experiment", "ExperimentConfig", "ExperimentStatus", "ExperimentationService", "SignificanceResult", "TrafficAllocator", "VariantMetrics", "chi_squared_test", "proportion_z_test"]
