@@ -101,3 +101,6 @@ async def get_transaction(transaction_id: str, request: Request) -> ScoredTransa
         raise HTTPException(status_code=404, detail="Transaction not found")
 
     return txn
+
+
+__all__ = ["TransactionSearchResponse", "TransactionStatsResponse", "router"]
