@@ -185,3 +185,6 @@ async def _score_single(
             pass
 
     return await scorer.score(txn, features)
+
+
+__all__ = ["BatchScoreRequest", "BatchScoreResponse", "BatchStatsResponse", "router"]
