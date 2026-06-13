@@ -351,3 +351,13 @@ class HotReloader:
 
 class ConfigReloadError(Exception):
     """Raised when a configuration reload fails validation."""
+
+
+__all__ = [
+    "ChangeCallback",
+    "ConfigReloadError",
+    "ConfigSnapshot",
+    "ConfigValidator",
+    "HotReloader",
+    "compute_diff",
+]
