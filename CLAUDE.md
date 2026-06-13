@@ -16,9 +16,10 @@ Long-term project memory lives in the Obsidian vault at `~/vault`:
 - `~/vault/fraud-detection-platform/logs/` — session logs
 - `~/vault/graphify/fraud-detection-platform/` — codebase knowledge graph (symlinked)
 
-Use `/resume` at the start of a session to load context, and `/save` at the
-end to persist a session log. See `~/vault/CLAUDE.md` for the full Zettelkasten
-rules.
+Use `/vault-resume` at the start of a session to load context, and `/vault-save`
+at the end to persist a session log. (These are custom commands; the built-in
+`/resume` instead resumes a previous conversation.) See `~/vault/CLAUDE.md` for
+the full Zettelkasten rules.
 
 ## Context Navigation (Graphify)
 
