@@ -210,3 +210,6 @@ class FeedbackStore:
                 }
                 for e in self._entries
             ]
+
+
+__all__ = ["FeedbackEntry", "FeedbackStats", "FeedbackStore"]
