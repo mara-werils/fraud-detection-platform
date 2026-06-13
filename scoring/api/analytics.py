@@ -353,3 +353,6 @@ async def compare_periods(
         is_improvement=result.is_improvement,
     )
     return result
+
+
+__all__ = ["CompareRequest", "DistributionResponse", "GeoResponse", "PatternsResponse", "router"]
