@@ -45,3 +45,6 @@ async def drift_history(
         "total": len(reports),
         "reports": [r.to_dict() for r in reports],
     }
+
+
+__all__ = ["router"]
