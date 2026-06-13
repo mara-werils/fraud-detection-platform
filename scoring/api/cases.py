@@ -165,3 +165,6 @@ async def update_case(
         raise HTTPException(status_code=500, detail="Failed to update case")
 
     return case
+
+
+__all__ = ["CaseListResponse", "CaseStatsResponse", "CreateCaseRequest", "UpdateCaseRequest", "router"]
