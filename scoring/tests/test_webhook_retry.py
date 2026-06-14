@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-import asyncio
 import time
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import httpx
 import pytest
@@ -22,7 +21,6 @@ from scoring.services.webhook_retry import (
     WebhookSignature,
     _compute_delay,
 )
-
 
 # ---------------------------------------------------------------------------
 # Fixtures

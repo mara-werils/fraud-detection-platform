@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import math
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -12,11 +11,9 @@ from scoring.services.behavioral_analytics import (
     BehavioralAnalytics,
     DeviationResult,
     TransactionRecord,
-    UserProfileSummary,
     _EMAAccumulator,
     _sigmoid,
 )
-
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 

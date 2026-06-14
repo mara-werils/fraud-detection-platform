@@ -10,12 +10,10 @@ from scoring.services.model_experimentation import (
     ExperimentConfig,
     ExperimentStatus,
     SignificanceResult,
-    TrafficAllocator,
     VariantMetrics,
     chi_squared_test,
     proportion_z_test,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers

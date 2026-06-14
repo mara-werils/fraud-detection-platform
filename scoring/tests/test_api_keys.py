@@ -3,18 +3,15 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-from unittest.mock import patch
 
 import pytest
 from fastapi import FastAPI
 from starlette.testclient import TestClient
 
 from scoring.api.api_keys import (
-    ALL_PERMISSIONS,
     APIKey,
     APIKeyStore,
     Permission,
-    UsageRecord,
     _generate_raw_key,
     _hash_key,
     cleanup_expired_keys,
@@ -28,7 +25,6 @@ from scoring.api.api_keys import (
     router,
     validate_key,
 )
-
 
 # ── Fixtures ─────────────────────────────────────────────────────────────────
 

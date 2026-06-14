@@ -9,6 +9,7 @@ from __future__ import annotations
 import pytest
 
 from scoring.models.rule_templates import (
+    _BUILTIN_TEMPLATES,
     CARD_TESTING_PATTERN,
     DORMANT_ACCOUNT_ACTIVATION,
     FIRST_TIME_MERCHANT,
@@ -22,9 +23,7 @@ from scoring.models.rule_templates import (
     RuleInstance,
     RuleTemplate,
     TemplateRegistry,
-    _BUILTIN_TEMPLATES,
 )
-
 
 # ---------------------------------------------------------------------------
 # High-value transaction rule

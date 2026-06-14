@@ -8,7 +8,6 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from scoring.services.network_analysis import (
-    AnomalousPattern,
     CentralityScores,
     CommunityResult,
     FraudRingCandidate,

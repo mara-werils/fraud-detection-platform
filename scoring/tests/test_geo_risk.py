@@ -8,7 +8,6 @@ from scoring.services.geo_risk import (
     GeoLocation,
     GeoRiskLevel,
     GeoRiskService,
-    ImpossibleTravelResult,
     TransactionGeoData,
     get_geo_risk_service,
 )

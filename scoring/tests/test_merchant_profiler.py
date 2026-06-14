@@ -5,7 +5,6 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from scoring.services.merchant_profiler import (
-    HIGH_RISK_CATEGORIES,
     MCC_TIER_MAP,
     MCCRiskTier,
     MerchantProfiler,
@@ -13,7 +12,6 @@ from scoring.services.merchant_profiler import (
     is_high_risk_category,
     mcc_to_tier,
 )
-
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 

@@ -10,7 +10,6 @@ from scoring.services.compliance_reporting import (
     GDPRRequestStatus,
     GDPRRequestType,
     Jurisdiction,
-    JURISDICTION_TEMPLATES,
     PCIRequirementStatus,
     ReportStatus,
     ReportType,
