@@ -11,13 +11,12 @@ import csv
 import io
 import json
 import sys
-from datetime import datetime, timedelta, timezone, UTC
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
 import httpx
 import yaml
-
 
 # ---------------------------------------------------------------------------
 # Helpers
