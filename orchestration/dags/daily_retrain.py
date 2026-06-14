@@ -6,7 +6,7 @@ Tasks: export data -> feature engineering -> train XGBoost -> evaluate -> promot
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 import structlog
 from airflow import DAG
