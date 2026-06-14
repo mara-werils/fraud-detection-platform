@@ -15,8 +15,8 @@ Usage:
 from __future__ import annotations
 
 import time
-from typing import TypeVar
 from collections.abc import Callable
+from typing import TypeVar
 
 from prometheus_client import CollectorRegistry, Counter, Gauge, Histogram, generate_latest
 
