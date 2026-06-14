@@ -207,7 +207,7 @@ class TestFreshnessMonitor:
     def test_avg_delay(self):
         monitor = FreshnessMonitor()
         now = time.time()
-        for i in range(5):
+        for _ in range(5):
             monitor.record_arrival("src", record_timestamp=now - 10)
         avg = monitor.avg_delay("src")
         assert avg is not None
