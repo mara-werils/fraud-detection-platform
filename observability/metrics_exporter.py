@@ -290,7 +290,7 @@ class _Timer:
         self._callback = callback
         self._start: float = 0.0
 
-    def __enter__(self) -> "_Timer":
+    def __enter__(self) -> _Timer:
         self._start = time.monotonic()
         return self
 
