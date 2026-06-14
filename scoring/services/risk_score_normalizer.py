@@ -14,11 +14,10 @@ Strategies:
 from __future__ import annotations
 
 import bisect
-import math
 import statistics
-from dataclasses import dataclass, field
-from enum import StrEnum
 from collections.abc import Sequence
+from dataclasses import dataclass
+from enum import StrEnum
 
 import structlog
 

@@ -12,7 +12,7 @@ Provides location-based risk analysis including:
 from __future__ import annotations
 
 import math
-from datetime import UTC, datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from typing import Any
 from uuid import uuid4

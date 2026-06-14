@@ -8,7 +8,7 @@ and applies penalties for suspicious IPs.
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import structlog
 from redis.asyncio import Redis

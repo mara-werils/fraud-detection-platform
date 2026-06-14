@@ -9,11 +9,9 @@ similarity search for related cases.
 from __future__ import annotations
 
 import math
-from collections import defaultdict
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from threading import Lock
-from typing import Any
 from uuid import uuid4
 
 import structlog

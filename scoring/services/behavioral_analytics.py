@@ -16,10 +16,9 @@ recent behavior is weighted more heavily than stale history.
 from __future__ import annotations
 
 import math
-import statistics
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime
 from threading import Lock
 from typing import Any
 

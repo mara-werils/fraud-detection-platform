@@ -16,9 +16,8 @@ matrix:
 
 from __future__ import annotations
 
-import statistics
-from dataclasses import dataclass, field
 from collections.abc import Sequence
+from dataclasses import dataclass, field
 
 import structlog
 
