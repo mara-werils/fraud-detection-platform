@@ -19,17 +19,14 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import random
 import statistics
-import sys
 import time
 import tracemalloc
+from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from typing import Any
-from collections.abc import Callable
 from uuid import uuid4
-
 
 # ---------------------------------------------------------------------------
 # Synthetic payload generator
