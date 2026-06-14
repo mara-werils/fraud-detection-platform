@@ -13,7 +13,7 @@ import random
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import Final
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 from shared.schemas import Transaction, TransactionType
 from simulator.generators import (
@@ -25,7 +25,6 @@ from simulator.generators import (
     _generate_ip_prefix,
     _hash_card,
     _jitter_location,
-    build_user_pool,
 )
 
 __all__ = [
