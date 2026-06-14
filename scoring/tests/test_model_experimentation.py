@@ -568,7 +568,6 @@ class TestMultiVariant:
 
         results = svc.run_significance_tests("exp-001")
         # Should have results for model_a and model_b vs control
-        variant_ids_tested = {r.winner for r in results if r.winner is not None}
         # At least model_a should appear (higher precision)
         assert len(results) > 0
 
