@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-import asyncio
-import json
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import httpx
 import pytest
@@ -14,10 +12,8 @@ from sdk.async_client import (
     AsyncFraudClient,
     AsyncFraudClientError,
     RateLimitError,
-    _RETRYABLE_STATUS_CODES,
 )
 from sdk.models import BatchResult, CaseInfo, ScoringResult, SearchResult
-
 
 # ---------------------------------------------------------------------------
 # Helpers

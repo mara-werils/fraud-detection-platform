@@ -5,10 +5,10 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from typing import Any
-from collections.abc import AsyncIterator, Callable
 from uuid import uuid4
 
 import httpx
