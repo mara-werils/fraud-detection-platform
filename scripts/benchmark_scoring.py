@@ -26,7 +26,8 @@ import sys
 import time
 import tracemalloc
 from dataclasses import asdict, dataclass, field
-from typing import Any, Callable
+from typing import Any
+from collections.abc import Callable
 from uuid import uuid4
 
 

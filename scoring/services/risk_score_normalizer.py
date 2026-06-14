@@ -18,7 +18,7 @@ import math
 import statistics
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Sequence
+from collections.abc import Sequence
 
 import structlog
 

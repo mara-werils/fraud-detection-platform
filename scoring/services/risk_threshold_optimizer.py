@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import statistics
 from dataclasses import dataclass, field
-from typing import Sequence
+from collections.abc import Sequence
 
 import structlog
 

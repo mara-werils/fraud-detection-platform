@@ -7,7 +7,8 @@ import logging
 import time
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
-from typing import Any, AsyncIterator, Callable
+from typing import Any
+from collections.abc import AsyncIterator, Callable
 from uuid import uuid4
 
 import httpx
