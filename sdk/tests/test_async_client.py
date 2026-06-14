@@ -573,10 +573,12 @@ class TestStreamEvents:
         """Verify that stream_events raises ImportError when websockets is missing."""
         client = AsyncFraudClient(max_retries=1)
 
-        with patch.dict("sys.modules", {"websockets": None}):
-            with pytest.raises(ImportError, match="websockets"):
-                async with client.stream_events(["transaction.scored"]) as stream:
-                    pass
+        with (
+            patch.dict("sys.modules", {"websockets": None}),
+            pytest.raises(ImportError, match="websockets"),
+        ):
+            async with client.stream_events(["transaction.scored"]):
+                pass
 
 
 # ---------------------------------------------------------------------------
