@@ -524,7 +524,7 @@ async def live_transaction_feed(websocket: WebSocket) -> None:
                         "type": "config_ack",
                         "min_score": min_score,
                     })
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 # No client message within the timeout window; send a heartbeat
                 await websocket.send_json({"type": "heartbeat", "ts": datetime.now(UTC).isoformat()})
     except WebSocketDisconnect:

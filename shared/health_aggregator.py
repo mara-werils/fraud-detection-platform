@@ -152,7 +152,7 @@ class HealthAggregator:
             result = await asyncio.wait_for(probe(), timeout=self._timeout)
             result.latency_ms = (time.monotonic() - start) * 1000
             return result
-        except asyncio.TimeoutError:
+        except TimeoutError:
             elapsed = (time.monotonic() - start) * 1000
             logger.warning("health_probe_timeout", component=name, elapsed_ms=elapsed)
             return ComponentHealth(
