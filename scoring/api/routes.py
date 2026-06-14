@@ -110,7 +110,6 @@ async def health_check(request: Request) -> dict[str, Any]:
     overall = kafka_healthy and redis_healthy and model_loaded
     status_code = 200 if overall else 503
 
-    uptime = None
     startup_time = getattr(request.app.state, "startup_time_seconds", None)
 
     body = {
