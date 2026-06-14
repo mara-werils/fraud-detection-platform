@@ -239,7 +239,7 @@ class TestSLATracking:
 
     def test_no_double_breach(self):
         engine = CaseWorkflowEngine()
-        case = engine.create_case(
+        engine.create_case(
             transaction_id="tx1", user_id="u1", amount=10000, risk_score=0.9,
         )
         future = datetime.now(UTC) + timedelta(hours=2)
@@ -538,7 +538,7 @@ class TestListCases:
     def test_filter_by_state(self):
         engine = CaseWorkflowEngine()
         c1 = engine.create_case(transaction_id="tx1", user_id="u1", amount=100, risk_score=0.1)
-        c2 = engine.create_case(transaction_id="tx2", user_id="u1", amount=100, risk_score=0.1)
+        engine.create_case(transaction_id="tx2", user_id="u1", amount=100, risk_score=0.1)
         engine.transition(c1.case_id, "investigating")
         cases, total = engine.list_cases(state="investigating")
         assert total == 1
@@ -547,7 +547,7 @@ class TestListCases:
     def test_filter_by_assigned_to(self):
         engine = CaseWorkflowEngine()
         c1 = engine.create_case(transaction_id="tx1", user_id="u1", amount=100, risk_score=0.1)
-        c2 = engine.create_case(transaction_id="tx2", user_id="u2", amount=100, risk_score=0.1)
+        engine.create_case(transaction_id="tx2", user_id="u2", amount=100, risk_score=0.1)
         engine.assign(c1.case_id, "alice")
         cases, _ = engine.list_cases(assigned_to="alice")
         assert len(cases) == 1
