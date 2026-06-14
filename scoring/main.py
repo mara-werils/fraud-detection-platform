@@ -7,7 +7,6 @@ import time
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
-import orjson
 import structlog
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -31,8 +30,8 @@ from scoring.api.transactions import router as transactions_router
 from scoring.api.versioning import VersioningMiddleware
 from scoring.api.webhooks import router as webhooks_router
 from scoring.config import ScoringConfig
-from scoring.exceptions import ModelNotLoadedError, ScoringError
 from scoring.consumer import create_consumer_handler
+from scoring.exceptions import ModelNotLoadedError, ScoringError
 from scoring.models.ensemble import EnsembleScorer
 from scoring.models.rule_engine import RuleEngine
 from scoring.plugins.registry import PluginRegistry
