@@ -89,7 +89,7 @@ class TestSARGeneration:
         svc = _make_service()
         try:
             svc.review_sar("bad-id", reviewer="mgr-1", approved=True)
-            assert False, "Expected ValueError"
+            raise AssertionError("Expected ValueError")
         except ValueError:
             pass
 
@@ -100,7 +100,7 @@ class TestSARGeneration:
         svc.file_sar(sar.report_id)
         try:
             svc.review_sar(sar.report_id, reviewer="mgr-2", approved=True)
-            assert False, "Expected ValueError"
+            raise AssertionError("Expected ValueError")
         except ValueError:
             pass
 
@@ -117,7 +117,7 @@ class TestSARGeneration:
         sar = svc.generate_sar(**_sample_sar_kwargs())
         try:
             svc.file_sar(sar.report_id)
-            assert False, "Expected ValueError"
+            raise AssertionError("Expected ValueError")
         except ValueError as exc:
             assert "APPROVED" in str(exc)
 
@@ -351,7 +351,7 @@ class TestGDPRRequests:
         svc.process_gdpr_request(req.request_id, processed_by="dpo-1")
         try:
             svc.process_gdpr_request(req.request_id, processed_by="dpo-2")
-            assert False, "Expected ValueError"
+            raise AssertionError("Expected ValueError")
         except ValueError:
             pass
 
@@ -359,7 +359,7 @@ class TestGDPRRequests:
         svc = _make_service()
         try:
             svc.process_gdpr_request("bad-id", processed_by="dpo-1")
-            assert False, "Expected ValueError"
+            raise AssertionError("Expected ValueError")
         except ValueError:
             pass
 
@@ -555,7 +555,7 @@ class TestReportScheduling:
         svc = _make_service()
         try:
             svc.disable_schedule("bad-id")
-            assert False, "Expected ValueError"
+            raise AssertionError("Expected ValueError")
         except ValueError:
             pass
 
@@ -675,7 +675,7 @@ class TestExportFormats:
         svc = _make_service()
         try:
             svc.export_sar("bad-id", ExportFormat.JSON)
-            assert False, "Expected ValueError"
+            raise AssertionError("Expected ValueError")
         except ValueError:
             pass
 
@@ -697,6 +697,6 @@ class TestExportFormats:
         svc = _make_service()
         try:
             svc.export_ctr("bad-id", ExportFormat.JSON)
-            assert False, "Expected ValueError"
+            raise AssertionError("Expected ValueError")
         except ValueError:
             pass
