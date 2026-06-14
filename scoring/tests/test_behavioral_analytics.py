@@ -6,6 +6,7 @@ import math
 from datetime import UTC, datetime, timedelta
 
 import pytest
+from pydantic import ValidationError
 
 from scoring.services.behavioral_analytics import (
     BehavioralAnalytics,
@@ -480,7 +481,7 @@ class TestEdgeCases:
         assert result.category_deviation < 0.5
 
     def test_transaction_record_validation(self):
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             TransactionRecord(
                 user_id="u1",
                 amount=-10.0,  # negative not allowed
