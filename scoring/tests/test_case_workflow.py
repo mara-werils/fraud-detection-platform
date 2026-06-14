@@ -114,7 +114,7 @@ class TestWorkflowTransitions:
         timeline = engine.get_timeline(case.case_id)
         events = [e for e in timeline if e.event_type == "state_changed"]
         assert len(events) == 1
-        assert "bob" == events[0].actor
+        assert events[0].actor == "bob"
 
     def test_transition_with_notes(self):
         engine, case = self._engine_with_case()
