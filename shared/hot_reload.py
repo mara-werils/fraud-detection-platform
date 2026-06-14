@@ -13,9 +13,9 @@ import json
 import logging
 import threading
 import time
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any, Protocol
-from collections.abc import Callable
 
 import yaml
 

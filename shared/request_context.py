@@ -19,9 +19,9 @@ from __future__ import annotations
 
 import contextvars
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
-from collections.abc import Callable, Awaitable
 
 import structlog
 

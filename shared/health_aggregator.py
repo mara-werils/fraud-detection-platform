@@ -18,10 +18,10 @@ from __future__ import annotations
 
 import asyncio
 import time
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
-from collections.abc import Callable, Awaitable
 
 import structlog
 
