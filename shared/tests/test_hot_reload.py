@@ -159,7 +159,7 @@ class TestHotReloaderInit:
         assert hr.snapshot["database"]["host"] == "localhost"
 
     def test_raises_on_missing_file(self, tmp_path: Path):
-        with pytest.raises(FileNotFoundError):
+        with pytest.raises(ConfigReloadError):
             HotReloader(tmp_path / "does_not_exist.yaml")
 
     def test_raises_on_invalid_initial_config(self, yaml_config: Path):
