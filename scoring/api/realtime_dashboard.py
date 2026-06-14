@@ -255,7 +255,6 @@ manager = ConnectionManager()
 async def get_overview(request: Request) -> OverviewStats:
     """Compute and return the real-time overview stats."""
     engine = _get_engine(request)
-    scorer = _get_scorer(request)
 
     try:
         dashboard = engine.get_dashboard_metrics()
