@@ -816,7 +816,6 @@ class ExperimentationService:
             experiment = self._experiments.get(experiment_id)
             if experiment is None or experiment.status != ExperimentStatus.RUNNING:
                 return
-            control_id = experiment.config.control_variant
             min_samples = experiment.config.min_samples_per_variant
             # Check minimum samples
             for metrics in experiment.variant_metrics.values():
