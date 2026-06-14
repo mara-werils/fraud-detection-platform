@@ -11,7 +11,7 @@ import csv
 import io
 import json
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, UTC
 from pathlib import Path
 from typing import Any
 
@@ -391,7 +391,7 @@ def cmd_stats(client: httpx.Client, _args: argparse.Namespace) -> Any:
 
 def cmd_export(client: httpx.Client, args: argparse.Namespace) -> Any:
     """Export platform data for a given time range."""
-    since = datetime.now(tz=timezone.utc) - timedelta(days=args.days)
+    since = datetime.now(tz=UTC) - timedelta(days=args.days)
     payload: dict[str, Any] = {
         "format": args.export_format,
         "since": since.isoformat(),
