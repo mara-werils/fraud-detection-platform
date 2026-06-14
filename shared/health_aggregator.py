@@ -139,7 +139,7 @@ class HealthAggregator:
         }
 
         results: list[ComponentHealth] = []
-        for name, task in tasks.items():
+        for task in tasks.values():
             results.append(await task)
 
         status = self._compute_status(results)
