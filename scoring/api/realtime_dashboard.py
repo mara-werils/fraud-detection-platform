@@ -21,10 +21,7 @@ from pydantic import BaseModel, Field
 
 from scoring.services.analytics_engine import (
     AnalyticsEngine,
-    GeoPoint,
-    ModelPerformanceMetrics,
     TimeGranularity,
-    TimeSeriesPoint,
 )
 
 logger = structlog.get_logger(__name__)

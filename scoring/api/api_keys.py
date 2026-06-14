@@ -19,7 +19,7 @@ from typing import Annotated
 from uuid import uuid4
 
 import structlog
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
 logger = structlog.get_logger(__name__)
